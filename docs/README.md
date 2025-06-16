@@ -2,9 +2,22 @@
 
 このフォルダには、Windows Kitting Workflowプロジェクトの詳細ドキュメントが含まれています。
 
+## 📖 クイックナビゲーション
+
+### 🎯 [目次・ガイド一覧](TABLE_OF_CONTENTS.md)
+目的別・レベル別の詳細なドキュメントガイド
+
+### 🚀 はじめて使う方
+[メインREADME](../README.md) → [アプリケーション管理ガイド](Application-Management.md) → [トラブルシューティングガイド](Troubleshooting.md)
+
+### ⚙️ カスタマイズしたい方
+[カスタマイズガイド](Customization-Guide.md) → [レジストリ設定ガイド](Registry-Configuration.md)
+
 ## ドキュメント一覧
 
-### 📋 [レジストリ設定ガイド](Registry-Configuration.md)
+### � 基本ガイド（ユーザー向け）
+
+### �📋 [レジストリ設定ガイド](Registry-Configuration.md)
 Windowsレジストリ設定の詳細説明
 - エクスプローラー設定（ファイル拡張子表示）
 - パフォーマンス設定（応答性向上）
@@ -75,50 +88,86 @@ Wi-Fi自動設定機能の詳細説明
 - セキュリティ考慮事項
 - トラブルシューティング
 
+### � 技術実装詳細（開発者向け）
+
+### �📢 [Teams通知機能強化](Teams-Notifications-Enhancement.md)
+Teams通知機能の改善実装詳細
+- 日本語エンコード対策
+- スレッド機能の実装
+- 設定ファイルの変更方法
+- 実装例とトラブルシューティング
+
+### 🎨 [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)
+Teams通知のアダプティブカード対応実装
+- MessageCardからAdaptive Cardへの移行
+- PC名プレフィックスの追加
+- スレッド機能の技術詳細
+- API使用例と実装方法
+
+### ⚡ [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md)
+WorkflowRoot取得処理の改善実装
+- 共通ヘルパー関数の導入
+- パス取得処理のキャッシュ化
+- エラー処理の標準化
+- 使用方法と実装例
+
 ## 推奨読書順序
 
-### 初回利用者
+### 🚀 初回利用者
 1. [メインREADME](../README.md) - プロジェクト概要とクイックスタート
 2. [アプリケーション管理ガイド](Application-Management.md) - インストールアプリの理解
 3. [レジストリ設定ガイド](Registry-Configuration.md) - システム変更内容の理解
+4. [トラブルシューティングガイド](Troubleshooting.md) - 問題発生時の対処法
 
-### カスタマイズしたい場合
+### ⚙️ カスタマイズしたい場合
 1. [カスタマイズガイド](Customization-Guide.md) - 基本的なカスタマイズ方法
 2. [アプリケーション管理ガイド](Application-Management.md) - アプリ設定の変更
 3. [Windows Updateガイド](Windows-Update-Guide.md) - Windows Update設定の詳細
 4. [レジストリ設定ガイド](Registry-Configuration.md) - レジストリ設定の追加
+5. [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) - Wi-Fi自動設定の詳細
+6. [Slackスレッドガイド](Slack-Thread-Guide.md) - Slack通知の設定
 
-### 問題が発生した場合
+### 🔧 問題が発生した場合
 1. [トラブルシューティングガイド](Troubleshooting.md) - 問題解決方法
 2. [テスト・診断ガイド](Testing-Guide.md) - 診断ツールの使用
 3. [自動ログインREADME](AutoLogin-README.md) - 自動ログイン問題の場合
 
-### 開発・保守担当者
+### 👨‍💻 開発・保守担当者
 1. [テスト・診断ガイド](Testing-Guide.md) - テストツールの理解
-2. [カスタマイズガイド](Customization-Guide.md) - 高度なカスタマイズ
-3. [トラブルシューティングガイド](Troubleshooting.md) - サポート対応
+2. [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) - 共通処理の理解
+3. [Teams通知機能強化](Teams-Notifications-Enhancement.md) - Teams通知の実装
+4. [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md) - アダプティブカード詳細
+5. [カスタマイズガイド](Customization-Guide.md) - 高度なカスタマイズ
+6. [トラブルシューティングガイド](Troubleshooting.md) - サポート対応
 
 ## ドキュメント間の関連性
 
 ```
 README.md (メイン)
-├── Registry-Configuration.md
-├── Application-Management.md  
-├── Customization-Guide.md
-│   ├─ 参照 → Registry-Configuration.md
-│   ├─ 参照 → Application-Management.md
-│   ├─ 参照 → Windows-Update-Guide.md
-│   └─ 参照 → Troubleshooting.md
-├── Windows-Update-Guide.md
-│   ├─ 参照 → Customization-Guide.md
-│   ├─ 参照 → Troubleshooting.md
-│   └─ 参照 → Testing-Guide.md
-├── Troubleshooting.md
-│   ├─ 参照 → Testing-Guide.md
-│   └─ 参照 → AutoLogin-README.md
-├── Testing-Guide.md
-│   └─ 参照 → Troubleshooting.md
-└── AutoLogin-README.md
+├── 基本ガイド
+│   ├── Registry-Configuration.md
+│   ├── Application-Management.md  
+│   ├── Customization-Guide.md
+│   │   ├─ 参照 → Registry-Configuration.md
+│   │   ├─ 参照 → Application-Management.md
+│   │   ├─ 参照 → Windows-Update-Guide.md
+│   │   └─ 参照 → Troubleshooting.md
+│   ├── Windows-Update-Guide.md
+│   │   ├─ 参照 → Customization-Guide.md
+│   │   ├─ 参照 → Troubleshooting.md
+│   │   └─ 参照 → Testing-Guide.md
+│   ├── Wi-Fi-Configuration-Guide.md
+│   ├── Slack-Thread-Guide.md
+│   ├── Troubleshooting.md
+│   │   ├─ 参照 → Testing-Guide.md
+│   │   └─ 参照 → AutoLogin-README.md
+│   ├── Testing-Guide.md
+│   │   └─ 参照 → Troubleshooting.md
+│   └── AutoLogin-README.md
+└── 技術実装詳細
+    ├── Teams-Notifications-Enhancement.md
+    ├── Teams-Adaptive-Cards-Implementation.md
+    └── WorkflowRoot-Improvement-Guide.md
 ```
 
 ## ドキュメントの更新
@@ -129,6 +178,8 @@ README.md (メイン)
 2. **情報の一貫性**: 複数のドキュメントで矛盾がないか
 3. **例示の最新性**: コード例や設定例が現在のバージョンと一致するか
 4. **図表の更新**: ファイル構成図などが現在の構造と一致するか
+
+詳細な検証項目については[検証ノート](VALIDATION_NOTES.md)を参照してください。
 
 ## フィードバック
 

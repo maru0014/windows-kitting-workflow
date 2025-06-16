@@ -38,16 +38,19 @@ windows-kitting-workflow/
 │   ├── setup/                  # セットアップスクリプト
 │   └── cleanup/                # クリーンアップスクリプト
 ├── docs/                       # ドキュメント
+│   ├── README.md                    # ドキュメント一覧とナビゲーション
 │   ├── Registry-Configuration.md    # レジストリ設定詳細
 │   ├── Application-Management.md    # アプリケーション管理
 │   ├── Customization-Guide.md      # カスタマイズガイド
+│   ├── Windows-Update-Guide.md     # Windows Update詳細
+│   ├── Wi-Fi-Configuration-Guide.md # Wi-Fi設定ガイド
+│   ├── Slack-Thread-Guide.md       # Slackスレッド詳細
 │   ├── Troubleshooting.md          # トラブルシューティング
 │   ├── Testing-Guide.md            # テスト・診断ガイド
-│   ├── Windows-Update-Guide.md     # Windows Update詳細
-│   ├── Teams-Notifications-Enhancement.md  # Teams通知詳細
+│   ├── AutoLogin-README.md         # 自動ログイン詳細
+│   ├── Teams-Notifications-Enhancement.md  # Teams通知改善詳細
 │   ├── Teams-Adaptive-Cards-Implementation.md  # Teams実装詳細
-│   ├── Slack-Thread-Guide.md      # Slackスレッド詳細
-│   └── AutoLogin-README.md         # 自動ログイン詳細
+│   └── WorkflowRoot-Improvement-Guide.md  # WorkflowRoot改善詳細
 ├── tests/                      # テスト・診断ツール
 │   ├── README.md               # テストガイド
 │   ├── Run-AllTests.ps1        # テストランナー
@@ -144,14 +147,22 @@ PCごとにSlackスレッドを分けて通知することが可能です。複�
 
 ## ドキュメント
 
+### 📚 基本ガイド（ユーザー向け）
+- **[ドキュメントREADME](docs/README.md)**: 全ドキュメントの概要とナビゲーション
 - **[レジストリ設定ガイド](docs/Registry-Configuration.md)**: システム最適化設定の詳細
 - **[アプリケーション管理ガイド](docs/Application-Management.md)**: アプリインストールの管理方法
 - **[カスタマイズガイド](docs/Customization-Guide.md)**: ワークフローのカスタマイズ方法
 - **[Windows Updateガイド](docs/Windows-Update-Guide.md)**: Windows Update設定の詳細
+- **[Wi-Fi設定ガイド](docs/Wi-Fi-Configuration-Guide.md)**: Wi-Fi自動設定機能の詳細
 - **[Slackスレッドガイド](docs/Slack-Thread-Guide.md)**: Slackスレッド機能の使用方法
 - **[トラブルシューティングガイド](docs/Troubleshooting.md)**: 問題解決方法
 - **[テスト・診断ガイド](docs/Testing-Guide.md)**: テストツールの使用方法
 - **[自動ログインREADME](docs/AutoLogin-README.md)**: 自動ログイン機能の詳細
+
+### 🔧 技術実装詳細（開発者向け）
+- **[Teams通知機能強化](docs/Teams-Notifications-Enhancement.md)**: Teams通知機能の改善実装詳細
+- **[Teamsアダプティブカード実装](docs/Teams-Adaptive-Cards-Implementation.md)**: アダプティブカード対応実装
+- **[WorkflowRoot改善ガイド](docs/WorkflowRoot-Improvement-Guide.md)**: 共通処理改善の実装詳細
 
 ## ライセンス
 
