@@ -72,6 +72,20 @@ windows-kitting-workflow/
 - PowerShell 5.1以上
 - インターネット接続
 
+### ⚠️ 重要: セキュリティブロック解除
+
+インターネットからダウンロードしたファイルには、Windowsによってセキュリティブロックが設定されます。このワークフローを実行する前に、以下のコマンドでセキュリティブロックを解除してください：
+
+```batch
+# 最も簡単な方法（バッチファイル実行）
+.\unblock-files.bat
+
+# または PowerShell で直接実行
+.\scripts\Unblock-AllFiles.ps1 -Recurse
+```
+
+詳細な手順は[ファイルセキュリティブロック解除ガイド](docs/File-Security-Unblock-Guide.md)を参照してください。
+
 ### 基本的な使用方法
 
 1. **フォルダをCドライブに配置**
@@ -130,6 +144,20 @@ PCごとにSlackスレッドを分けて通知することが可能です。複�
 
 ## トラブルシューティング
 
+### セキュリティエラーが発生する場合
+
+PowerShell実行ポリシーエラーや「ファイルがブロックされています」エラーが発生した場合：
+
+```batch
+# セキュリティブロック解除
+.\unblock-files.bat
+
+# または実行ポリシーを一時的に変更
+powershell -ExecutionPolicy Bypass -File "main.bat"
+```
+
+### その他の問題
+
 問題が発生した場合は以下の診断ツールを使用してください：
 
 ```powershell
@@ -149,6 +177,7 @@ PCごとにSlackスレッドを分けて通知することが可能です。複�
 
 ### 📚 基本ガイド（ユーザー向け）
 - **[ドキュメントREADME](docs/README.md)**: 全ドキュメントの概要とナビゲーション
+- **[ファイルセキュリティブロック解除ガイド](docs/File-Security-Unblock-Guide.md)**: ダウンロードファイルのブロック解除方法
 - **[レジストリ設定ガイド](docs/Registry-Configuration.md)**: システム最適化設定の詳細
 - **[アプリケーション管理ガイド](docs/Application-Management.md)**: アプリインストールの管理方法
 - **[カスタマイズガイド](docs/Customization-Guide.md)**: ワークフローのカスタマイズ方法
