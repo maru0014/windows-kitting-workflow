@@ -1,0 +1,15 @@
+﻿{
+  "autologin": {
+    "enabled": true,
+    "credentials": {
+      "username": "",
+      "password": "",
+      "domain": ""
+    },
+    "settings": {
+      "autoLogonCount": 999,
+      "forcePasswordPrompt": false,
+      "description": "自動ログイン設定。username/passwordが空の場合は実行時に入力を求めます。使用例：username=Administrator, password=YourPassword, domain=WORKGROUP"
+    }
+  }
+}

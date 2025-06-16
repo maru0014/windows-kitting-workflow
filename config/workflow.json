@@ -1,0 +1,352 @@
+﻿{
+  "workflow": {
+    "name": "Windows11AutoSetup",
+    "version": "1.0",
+    "description": "Windows 11の完全自動セットアップワークフロー",
+    "settings": {
+      "maxRetries": 3,
+      "retryDelay": 30,
+      "logLevel": "INFO",
+      "enableReboot": true,
+      "cleanupOnComplete": true
+    },
+    "steps": [
+      {
+        "id": "bios-password-confirmation",
+        "name": "BIOSパスワード解除確認",
+        "description": "初回実行時にBIOSパスワードが解除済みかを確認（初回のみ表示）",
+        "script": "internal",
+        "type": "internal",
+        "runAsAdmin": false,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/bios-password-confirmed.completed"
+        },
+        "timeout": 600,
+        "retryCount": 0,
+        "rebootRequired": false,
+        "dependsOn": [],
+        "onError": "stop",
+        "internal": {
+          "function": "Show-BIOSPasswordDialog",
+          "description": "BIOSパスワード解除確認ダイアログを表示し、ユーザー確認を取得"
+        }
+      },
+      {
+        "id": "init",
+        "name": "初期化処理",
+        "description": "ワークフロー環境の初期化",
+        "script": "scripts/setup/initialize.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/init.completed"
+        },
+        "timeout": 300,
+        "retryCount": 2,
+        "rebootRequired": false,
+        "dependsOn": [
+          "bios-password-confirmation"
+        ],
+        "onError": "stop"
+      },
+      {
+        "id": "setup-wifi",
+        "name": "Wi-Fi設定プロファイル適用",
+        "description": "Wi-Fi設定プロファイルをシステムに適用",
+        "script": "scripts/setup/setup-wifi.ps",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/setup-wifi.completed"
+        },
+        "timeout": 120,
+        "retryCount": 2,
+        "rebootRequired": false,
+        "dependsOn": [
+          "init"
+        ],
+        "onError": "continue"
+      },
+      {
+        "id": "autologin-setup",
+        "name": "自動ログイン設定",
+        "description": "セットアップ期間中の自動ログイン設定（config/autologin.jsonの設定を使用）",
+        "script": "AutoLogin.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "Action": "Setup",
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/autologin-setup.completed"
+        },
+        "timeout": 120,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "init"
+        ],
+        "onError": "stop"
+      },
+      {
+        "id": "task-scheduler-setup",
+        "name": "タスクスケジューラ登録",
+        "description": "メインワークフローのタスクスケジューラ登録",
+        "script": "TaskScheduler.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "Action": "Register",
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/task-scheduler-setup.completed"
+        },
+        "timeout": 120,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "init"
+        ],
+        "onError": "stop"
+      },
+      {
+        "id": "enable-admin",
+        "name": "管理者アカウント有効化",
+        "description": "Administratorユーザーアカウントを有効化し、パスワードを設定",
+        "script": "scripts/setup/enable-admin.bat",
+        "type": "batch",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/enable-admin.completed"
+        },
+        "timeout": 120,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "task-scheduler-setup"
+        ],
+        "onError": "continue"
+      },
+      {
+        "id": "rename-computer",
+        "name": "PC名変更",
+        "description": "machine_list.csvを参照してPC名を変更し、再起動する",
+        "script": "scripts/setup/rename-computer.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "ConfigPath": "config/machine_list.csv",
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/rename-computer.completed"
+        },
+        "timeout": 300,
+        "retryCount": 2,
+        "rebootRequired": true,
+        "dependsOn": [
+          "enable-admin"
+        ],
+        "onError": "stop"
+      },
+      {
+        "id": "import-registry",
+        "name": "レジストリ設定インポート",
+        "description": ".regファイルの一括インポートとシステム設定の最適化",
+        "script": "scripts/setup/import-registry.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/registry-import.completed"
+        },
+        "timeout": 600,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "rename-computer"
+        ],
+        "onError": "continue"
+      },
+      {
+        "id": "windows-update",
+        "name": "Windows Update",
+        "description": "Windows Updateの実行",
+        "script": "scripts/setup/windows-update.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "MicrosoftUpdate": true,
+          "KBArticleID": [],
+          "NotKBArticleID": [],
+          "Force": true,
+          "RebootIfRequired": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/windows-update.completed"
+        },
+        "timeout": 3600,
+        "retryCount": 3,
+        "rebootRequired": true,
+        "dependsOn": [
+          "import-registry"
+        ],
+        "onError": "retry"
+      },
+      {
+        "id": "install-winget",
+        "name": "wingetセットアップ",
+        "description": "Windows Package Manager (winget) のインストールと設定",
+        "script": "scripts/setup/install-winget.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/winget.completed"
+        },
+        "timeout": 600,
+        "retryCount": 2,
+        "rebootRequired": false,
+        "dependsOn": [
+          "windows-update"
+        ],
+        "onError": "retry"
+      },
+      {
+        "id": "install-basic-apps",
+        "name": "基本アプリインストール",
+        "description": "Google Chrome、7-Zip等の基本アプリケーションのインストール",
+        "script": "scripts/setup/install-basic-apps.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/basic-apps.completed"
+        },
+        "timeout": 1800,
+        "retryCount": 2,
+        "rebootRequired": false,
+        "dependsOn": [
+          "install-winget"
+        ],
+        "onError": "continue"
+      },
+      {
+        "id": "uninstall-apps",
+        "name": "不要アプリアンインストール",
+        "description": "Windows標準の不要なアプリケーションのアンインストール",
+        "script": "scripts/setup/uninstall-apps.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/uninstall-apps.completed"
+        },
+        "timeout": 600,
+        "retryCount": 2,
+        "rebootRequired": false,
+        "dependsOn": [
+          "install-basic-apps"
+        ],
+        "onError": "retry"
+      },
+      {
+        "id": "deploy-desktop-files",
+        "name": "デスクトップファイル配置",
+        "description": "ユーザーデスクトップとパブリックデスクトップにファイルを配置",
+        "script": "scripts/setup/deploy-desktop-files.ps1",
+        "type": "powershell",
+        "runAsAdmin": false,
+        "parameters": {
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/deploy-desktop-files.completed"
+        },
+        "timeout": 300,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "uninstall-apps"
+        ],
+        "onError": "continue"
+      },
+      {
+        "id": "cleanup",
+        "name": "クリーンアップ",
+        "description": "一時ファイルの削除とシステムクリーンアップ",
+        "script": "scripts/cleanup/cleanup.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file",
+          "path": "status/cleanup.completed"
+        },
+        "timeout": 600,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "deploy-desktop-files"
+        ],
+        "onError": "continue"
+      },
+      {
+        "id": "task-scheduler-unregister",
+        "name": "タスクスケジューラ設定の削除",
+        "description": "タスクスケジューラ設定の削除",
+        "script": "TaskScheduler.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "Action": "Unregister",
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/final-cleanup.completed"
+        },
+        "timeout": 300,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "deploy-desktop-files"
+        ],
+        "onError": "continue"
+      },
+      {
+        "id": "disable-autologin",
+        "name": "自動ログイン解除",
+        "description": "セットアップ完了後の自動ログイン設定解除",
+        "script": "AutoLogin.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "Action": "Remove",
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/disable-autologin.completed"
+        },
+        "timeout": 120,
+        "retryCount": 2,
+        "rebootRequired": false,
+        "dependsOn": [
+          "task-scheduler-unregister"
+        ],
+        "onError": "continue"
+      }
+    ]
+  }
+}

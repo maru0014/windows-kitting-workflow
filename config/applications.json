@@ -1,0 +1,158 @@
+﻿{
+  "applications": [
+    {
+      "id": "powershell-7",
+      "name": "PowerShell 7",
+      "description": "Latest PowerShell",
+      "category": "Development",
+      "priority": 1,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Microsoft.PowerShell",
+      "args": []
+    },
+    {
+      "id": "windows-terminal",
+      "name": "Windows Terminal",
+      "description": "Modern terminal application",
+      "category": "Development",
+      "priority": 1,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Microsoft.WindowsTerminal",
+      "args": []
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "description": "Version control system",
+      "category": "Development",
+      "priority": 1,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Git.Git",
+      "args": []
+    },
+    {
+      "id": "vscode",
+      "name": "Visual Studio Code",
+      "description": "Lightweight code editor",
+      "category": "Development",
+      "priority": 2,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Microsoft.VisualStudioCode",
+      "args": []
+    },
+    {
+      "id": "notepad-plus-plus",
+      "name": "Notepad++",
+      "description": "Advanced text editor",
+      "category": "Productivity",
+      "priority": 2,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Notepad++.Notepad++",
+      "args": []
+    },
+    {
+      "id": "7zip",
+      "name": "7-Zip",
+      "description": "File compression tool",
+      "category": "Utilities",
+      "priority": 1,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "7zip.7zip",
+      "args": []
+    },
+    {
+      "id": "chrome",
+      "name": "Google Chrome",
+      "description": "Web browser",
+      "category": "Browsers",
+      "priority": 2,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Google.Chrome",
+      "args": []
+    },
+    {
+      "id": "firefox",
+      "name": "Mozilla Firefox",
+      "description": "Web browser",
+      "category": "Browsers",
+      "priority": 3,
+      "enabled": false,
+      "installMethod": "winget",
+      "packageId": "Mozilla.Firefox",
+      "args": []
+    },
+    {
+      "id": "vlc",
+      "name": "VLC Media Player",
+      "description": "Media player",
+      "category": "Media",
+      "priority": 3,
+      "enabled": false,
+      "installMethod": "winget",
+      "packageId": "VideoLAN.VLC",
+      "args": []
+    },
+    {
+      "id": "teams",
+      "name": "Microsoft Teams",
+      "description": "Team collaboration",
+      "category": "Communication",
+      "priority": 2,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Microsoft.Teams",
+      "args": []
+    },
+    {
+      "id": "adobe-reader",
+      "name": "Adobe Acrobat Reader",
+      "description": "PDF reader",
+      "category": "Productivity",
+      "priority": 2,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Adobe.Acrobat.Reader.64-bit",
+      "args": []
+    },
+    {
+      "id": "powertoys",
+      "name": "PowerToys",
+      "description": "Windows enhancement tools",
+      "category": "Utilities",
+      "priority": 3,
+      "enabled": false,
+      "installMethod": "winget",
+      "packageId": "Microsoft.PowerToys",
+      "args": []
+    },
+    {
+      "id": "custom-app-example",
+      "name": "Custom App Example",
+      "description": "Example MSI installer",
+      "category": "Custom",
+      "priority": 4,
+      "enabled": false,
+      "installMethod": "msi",
+      "installerPath": "downloads\\CustomApp.msi",
+      "args": ["/quiet", "/norestart"]
+    },
+    {
+      "id": "another-custom-app",
+      "name": "Another Custom App Example",
+      "description": "Example EXE installer",
+      "category": "Custom",
+      "priority": 4,
+      "enabled": false,
+      "installMethod": "exe",
+      "installerPath": "downloads\\AnotherApp.exe",
+      "args": ["/S", "/v/qn"]
+    }
+  ]
+}

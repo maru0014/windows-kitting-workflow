@@ -1,0 +1,94 @@
+﻿{
+  "notifications": {
+    "enabled": true,
+    "providers": {
+      "slack": {
+        "enabled": false,
+        "botToken": "xoxb-YOUR-BOT-TOKEN-HERE",
+        "channel": "#kitting-workflow",
+        "username": "Kitting-Workflow",
+        "iconEmoji": ":robot_face:",
+        "thread": {
+          "enabled": true,
+          "perMachine": true,
+          "tsStoragePath": "status/slack_thread_ts.json",
+          "_comment": "perMachineが有効な場合、usernameにPCのシリアル番号が自動的に追加されます（例: Kitting-Workflow-ABC123）"
+        }
+      },
+      "teams": {
+        "enabled": false,
+        "flowUrl": "https://your-teams-flow-url-here"
+      },
+      "email": {
+        "enabled": false,
+        "smtp": {
+          "server": "smtp.office365.com",
+          "port": 587,
+          "username": "your-email@company.com",
+          "password": "your-password",
+          "enableSSL": true
+        },
+        "recipients": [
+          "admin@company.com"
+        ]
+      }
+    },
+    "events": {
+      "onWorkflowStart": {
+        "enabled": true,
+        "message": "🚀 Windows Kitting Workflow開始: {machineName}でWindows 11セットアップを開始しました\n\n📋 実行予定のワークフロー:\n{workflowSteps}"
+      },
+      "onStepStart": {
+        "enabled": false,
+        "message": "⏳ ステップ開始: {stepName} を実行中..."
+      },
+      "onStepComplete": {
+        "enabled": true,
+        "message": "✅️ ステップ完了: {stepName} が正常に完了しました"
+      },
+      "onStepError": {
+        "enabled": true,
+        "message": "❌ ステップエラー: {stepName} でエラーが発生しました\nエラー: {errorMessage}"
+      },
+      "onStepRetry": {
+        "enabled": true,
+        "message": "🔄 ステップリトライ: {stepName} を再試行します (試行回数: {retryCount})"
+      },
+      "onRebootRequired": {
+        "enabled": true,
+        "message": "🔄 再起動要求: {stepName} 完了後に再起動が必要です。30秒後に自動再起動します"
+      },
+      "onWorkflowComplete": {
+        "enabled": true,
+        "message": "🎉 Windows Kitting Workflow完了: {machineName}のWindows 11セットアップが完了しました！\n総実行時間: {duration}\n完了したステップ: {completedSteps}/{totalSteps}"
+      },
+      "onWorkflowError": {
+        "enabled": true,
+        "message": "💥 Windows Kitting Workflowエラー: {machineName}でワークフローが停止しました\nエラー: {errorMessage}\nログファイル: {logPath}"
+      },
+      "onWorkflowCanceled": {
+        "enabled": true,
+        "message": "⚠️ Windows Kitting Workflowキャンセル: {machineName}でワークフローがキャンセルされました\nキャンセル理由: {cancelReason}"
+      }
+    },
+    "templates": {
+      "slack": {
+        "color": {
+          "start": "#36a64f",
+          "complete": "#36a64f",
+          "error": "#ff0000",
+          "warning": "#ffaa00"
+        },
+        "format": "blocks"
+      },
+      "teams": {
+        "format": "messageCard"
+      }
+    },
+    "retrySettings": {
+      "maxRetries": 3,
+      "retryDelay": 30,
+      "exponentialBackoff": true
+    }
+  }
+}
