@@ -20,6 +20,7 @@ Windows Kitting Workflowは、Windows 11 PCを完全自動でセットアップ�
 windows-kitting-workflow/
 ├── README.md                     # このファイル
 ├── main.bat                     # メインエントリーポイント
+├── unblock-files.bat            # セキュリティブロック一括解除
 ├── MainWorkflow.ps1             # メインワークフローエンジン
 ├── AutoLogin.ps1                # 自動ログイン設定管理
 ├── TaskScheduler.ps1            # タスクスケジューラ管理
@@ -35,6 +36,7 @@ windows-kitting-workflow/
 │   └── registry/               # レジストリ設定ファイル
 ├── scripts/                     # スクリプトファイル
 │   ├── Common-LogFunctions.ps1  # 共通ログ関数
+│   ├── Unblock-AllFiles.ps1    # セキュリティブロック一括解除
 │   ├── setup/                  # セットアップスクリプト
 │   └── cleanup/                # クリーンアップスクリプト
 ├── docs/                       # ドキュメント
