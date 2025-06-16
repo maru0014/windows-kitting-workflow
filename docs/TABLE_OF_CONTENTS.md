@@ -1,0 +1,130 @@
+# Windows Kitting Workflow - ドキュメント目次
+
+## 📖 この目次について
+
+このドキュメントは、Windows Kitting Workflowプロジェクトの全ドキュメントを体系的に整理し、目的や経験レベルに応じて適切なドキュメントを見つけられるようにします。
+
+## 🎯 目的別ガイド
+
+### 🚀 はじめて使う方
+1. **[メインREADME](../README.md)** - プロジェクト概要とクイックスタート
+2. **[トラブルシューティングガイド](Troubleshooting.md)** - 問題発生時の対処法
+3. **[アプリケーション管理ガイド](Application-Management.md)** - インストールされるアプリの理解
+
+### ⚙️ カスタマイズしたい方
+1. **[カスタマイズガイド](Customization-Guide.md)** - 基本的なカスタマイズ方法
+2. **[レジストリ設定ガイド](Registry-Configuration.md)** - システム設定の詳細
+3. **[Windows Updateガイド](Windows-Update-Guide.md)** - アップデート設定の詳細
+4. **[Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md)** - Wi-Fi自動設定
+
+### 🔔 通知機能を設定したい方
+1. **[Slackスレッドガイド](Slack-Thread-Guide.md)** - Slack通知の基本設定
+2. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - Teams通知の基本実装
+3. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - 高度なTeams通知
+
+### 🧪 テスト・診断を行いたい方
+1. **[テスト・診断ガイド](Testing-Guide.md)** - テストツールの使用方法
+2. **[トラブルシューティングガイド](Troubleshooting.md)** - 問題の診断と解決
+
+### 🔧 開発・保守担当者
+1. **[WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md)** - 共通処理の実装詳細
+2. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - 通知機能の技術詳細
+3. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - アダプティブカード技術詳細
+
+## 📂 機能別ドキュメント一覧
+
+### 🔧 システム設定・カスタマイズ
+| ドキュメント | 対象者 | 内容 |
+|-------------|--------|------|
+| [レジストリ設定ガイド](Registry-Configuration.md) | 上級者 | レジストリ設定の詳細説明 |
+| [アプリケーション管理ガイド](Application-Management.md) | 全ユーザー | アプリインストール管理 |
+| [カスタマイズガイド](Customization-Guide.md) | 中級者 | ワークフローのカスタマイズ |
+| [Windows Updateガイド](Windows-Update-Guide.md) | 中級者 | Windows Update設定詳細 |
+| [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) | 中級者 | Wi-Fi自動設定機能 |
+
+### 🔔 通知・連携機能
+| ドキュメント | 対象者 | 内容 |
+|-------------|--------|------|
+| [Slackスレッドガイド](Slack-Thread-Guide.md) | 中級者 | Slack通知機能の詳細 |
+| [Teams通知機能強化](Teams-Notifications-Enhancement.md) | 開発者 | Teams通知の基本実装 |
+| [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md) | 開発者 | 高度なTeams通知実装 |
+
+### 🧪 テスト・サポート
+| ドキュメント | 対象者 | 内容 |
+|-------------|--------|------|
+| [テスト・診断ガイド](Testing-Guide.md) | 全ユーザー | テストツールの使用方法 |
+| [トラブルシューティングガイド](Troubleshooting.md) | 全ユーザー | 問題解決方法 |
+
+### 🔐 セキュリティ機能
+| ドキュメント | 対象者 | 内容 |
+|-------------|--------|------|
+| [自動ログインREADME](AutoLogin-README.md) | 上級者 | 自動ログイン機能詳細 |
+
+### 👨‍💻 開発・技術詳細
+| ドキュメント | 対象者 | 内容 |
+|-------------|--------|------|
+| [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) | 開発者 | 共通処理改善の実装 |
+
+## 📈 スキルレベル別推奨順序
+
+### 👶 初心者（Windows管理が初めて）
+1. [メインREADME](../README.md) → 2. [アプリケーション管理ガイド](Application-Management.md) → 3. [トラブルシューティングガイド](Troubleshooting.md)
+
+### 🎓 中級者（基本的なカスタマイズを行いたい）
+1. [カスタマイズガイド](Customization-Guide.md) → 2. [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) → 3. [Slackスレッドガイド](Slack-Thread-Guide.md)
+
+### 🎯 上級者（システム最適化を行いたい）
+1. [レジストリ設定ガイド](Registry-Configuration.md) → 2. [Windows Updateガイド](Windows-Update-Guide.md) → 3. [自動ログインREADME](AutoLogin-README.md)
+
+### 👨‍💻 開発者（機能拡張・改修を行いたい）
+1. [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) → 2. [Teams通知機能強化](Teams-Notifications-Enhancement.md) → 3. [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)
+
+## 🔗 ドキュメント間の関連性
+
+```mermaid
+graph TD
+    A[メインREADME] --> B[アプリケーション管理]
+    A --> C[カスタマイズガイド]
+    A --> D[トラブルシューティング]
+    
+    C --> E[レジストリ設定]
+    C --> F[Windows Update]
+    C --> G[Wi-Fi設定]
+    C --> H[Slack通知]
+    
+    H --> I[Teams通知基本]
+    I --> J[Teams アダプティブカード]
+    
+    D --> K[テスト・診断]
+    D --> L[自動ログイン]
+    
+    K --> M[WorkflowRoot改善]
+```
+
+## 📋 チェックリスト
+
+### 初回セットアップ時
+- [ ] [メインREADME](../README.md)を読んで全体像を把握
+- [ ] [アプリケーション管理ガイド](Application-Management.md)でインストールアプリを確認
+- [ ] [トラブルシューティングガイド](Troubleshooting.md)を確認
+- [ ] 必要に応じて[カスタマイズガイド](Customization-Guide.md)を参照
+
+### カスタマイズ時
+- [ ] [カスタマイズガイド](Customization-Guide.md)で基本方法を理解
+- [ ] 必要な機能別ガイドを参照（レジストリ、Wi-Fi、通知など）
+- [ ] [テスト・診断ガイド](Testing-Guide.md)でテスト実行
+
+### 問題発生時
+- [ ] [トラブルシューティングガイド](Troubleshooting.md)で解決方法を確認
+- [ ] [テスト・診断ガイド](Testing-Guide.md)で診断実行
+- [ ] 関連する機能別ガイドを確認
+
+## 📞 サポート
+
+- **GitHub Issues**: バグ報告や機能要求
+- **ドキュメント改善**: プルリクエストを歓迎します
+- **質問**: GitHubのDiscussionsをご利用ください
+
+---
+
+最終更新: 2025年6月16日
