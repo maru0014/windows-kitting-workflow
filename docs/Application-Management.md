@@ -17,7 +17,6 @@ Windows Kitting Workflowでは、JSONベースの設定ファイルを使用し�
 - **PowerToys**: Microsoft製ユーティリティ集
 
 ### 生産性
-- **Sakura Editor**: 軽量日本語対応テキストエディタ
 - **Google 日本語入力**: 日本語入力システム
 - **Adobe Acrobat Reader**: PDF閲覧・編集
 
@@ -177,16 +176,6 @@ EXEファイルを使用したインストール
 ### 日本語環境に特化したアプリケーション例
 
 ```json
-{
-  "id": "sakura-editor",
-  "name": "Sakura Editor",
-  "description": "軽量日本語対応テキストエディタ",
-  "category": "Productivity",
-  "priority": 2,
-  "enabled": true,
-  "installMethod": "winget",
-  "packageId": "SakuraEditor.SakuraEditor"
-},
 {
   "id": "google-japanese-input",
   "name": "Google 日本語入力",
