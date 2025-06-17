@@ -283,6 +283,29 @@
         "onError": "continue"
       },
       {
+        "id": "setup-bitlocker",
+        "name": "BitLocker暗号化設定",
+        "description": "システムドライブのBitLocker暗号化を設定",
+        "script": "scripts/setup/setup-bitlocker.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "EnablePIN": false,
+          "Force": false
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/setup-bitlocker.completed"
+        },
+        "timeout": 600,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [
+          "deploy-desktop-files"
+        ],
+        "onError": "continue"
+      },
+      {
         "id": "cleanup",
         "name": "クリーンアップ",
         "description": "一時ファイルの削除とシステムクリーンアップ",
@@ -297,7 +320,7 @@
         "retryCount": 1,
         "rebootRequired": false,
         "dependsOn": [
-          "deploy-desktop-files"
+          "setup-bitlocker"
         ],
         "onError": "continue"
       },

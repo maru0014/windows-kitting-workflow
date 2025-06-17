@@ -38,6 +38,7 @@
 |-------------|--------|------|
 | [レジストリ設定ガイド](Registry-Configuration.md) | 上級者 | レジストリ設定の詳細説明 |
 | [アプリケーション管理ガイド](Application-Management.md) | 全ユーザー | アプリインストール管理 |
+| [BitLocker設定ガイド](BitLocker-Configuration-Guide.md) | 中級者 | BitLocker暗号化設定 |
 | [カスタマイズガイド](Customization-Guide.md) | 中級者 | ワークフローのカスタマイズ |
 | [Windows Updateガイド](Windows-Update-Guide.md) | 中級者 | Windows Update設定詳細 |
 | [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) | 中級者 | Wi-Fi自動設定機能 |

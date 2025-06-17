@@ -115,6 +115,7 @@ windows-kitting-workflow/
 - **エクスプローラー設定**: ファイル拡張子表示でセキュリティ向上
 - **パフォーマンス設定**: 応答性向上、視覚効果最適化
 - **プライバシー設定**: 不要な情報収集・広告配信の抑制
+- **BitLocker暗号化**: TPMベースのシステムドライブ暗号化
 - **タスクバー調整**: 不要なボタンの非表示
 
 詳細は[レジストリ設定ガイド](docs/Registry-Configuration.md)を参照してください。
@@ -183,6 +184,7 @@ powershell -ExecutionPolicy Bypass -File "main.bat"
 - **[ファイルセキュリティブロック解除ガイド](docs/File-Security-Unblock-Guide.md)**: ダウンロードファイルのブロック解除方法
 - **[レジストリ設定ガイド](docs/Registry-Configuration.md)**: システム最適化設定の詳細
 - **[アプリケーション管理ガイド](docs/Application-Management.md)**: アプリインストールの管理方法
+- **[BitLocker設定ガイド](docs/BitLocker-Configuration-Guide.md)**: BitLocker暗号化の自動設定
 - **[カスタマイズガイド](docs/Customization-Guide.md)**: ワークフローのカスタマイズ方法
 - **[Windows Updateガイド](docs/Windows-Update-Guide.md)**: Windows Update設定の詳細
 - **[Wi-Fi設定ガイド](docs/Wi-Fi-Configuration-Guide.md)**: Wi-Fi自動設定機能の詳細

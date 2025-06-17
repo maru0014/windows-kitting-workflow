@@ -33,6 +33,14 @@ Windowsレジストリ設定の詳細説明
 - カスタマイズ例
 - トラブルシューティング
 
+### 🔐 [BitLocker設定ガイド](BitLocker-Configuration-Guide.md)
+BitLocker暗号化の自動設定
+- TPMベースの暗号化設定
+- PIN認証オプション
+- 回復キーの自動管理
+- セキュリティ考慮事項
+- トラブルシューティング
+
 ### ⚙️ [カスタマイズガイド](Customization-Guide.md)
 ワークフローのカスタマイズ方法
 - workflow.json設定の詳細
