@@ -55,7 +55,7 @@
         "id": "setup-wifi",
         "name": "Wi-Fi設定プロファイル適用",
         "description": "Wi-Fi設定プロファイルをシステムに適用",
-        "script": "scripts/setup/setup-wifi.ps",
+        "script": "scripts/setup/setup-wifi.ps1",
         "type": "powershell",
         "runAsAdmin": true,
         "completionCheck": {
