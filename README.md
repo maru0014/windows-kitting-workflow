@@ -104,11 +104,12 @@ windows-kitting-workflow/
 ## インストールされる内容
 
 ### 基本アプリケーション
-- **開発ツール**: PowerShell 7, Windows Terminal, Git, Visual Studio Code
-- **ユーティリティ**: 7-Zip, Notepad++, PowerToys  
+- **開発ツール**: PowerShell 7, Git, Visual Studio Code
+- **ユーティリティ**: 7-Zip, PowerToys  
+- **生産性**: Sakura Editor, Google 日本語入力, Adobe Acrobat Reader
 - **ブラウザ**: Google Chrome, Mozilla Firefox
 - **メディア**: VLC Media Player
-- **生産性**: Microsoft Teams, Adobe Acrobat Reader
+- **コミュニケーション**: Microsoft Teams, Zoom
 
 ### システム最適化
 - **エクスプローラー設定**: ファイル拡張子表示でセキュリティ向上

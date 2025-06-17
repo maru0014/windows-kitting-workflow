@@ -12,17 +12,6 @@
       "args": []
     },
     {
-      "id": "windows-terminal",
-      "name": "Windows Terminal",
-      "description": "Modern terminal application",
-      "category": "Development",
-      "priority": 1,
-      "enabled": true,
-      "installMethod": "winget",
-      "packageId": "Microsoft.WindowsTerminal",
-      "args": []
-    },
-    {
       "id": "git",
       "name": "Git",
       "description": "Version control system",
@@ -45,14 +34,14 @@
       "args": []
     },
     {
-      "id": "notepad-plus-plus",
-      "name": "Notepad++",
-      "description": "Advanced text editor",
+      "id": "sakura-editor",
+      "name": "Sakura Editor",
+      "description": "Lightweight Japanese text editor",
       "category": "Productivity",
       "priority": 2,
       "enabled": true,
       "installMethod": "winget",
-      "packageId": "Notepad++.Notepad++",
+      "packageId": "SakuraEditor.SakuraEditor",
       "args": []
     },
     {
@@ -64,6 +53,17 @@
       "enabled": true,
       "installMethod": "winget",
       "packageId": "7zip.7zip",
+      "args": []
+    },
+    {
+      "id": "google-japanese-input",
+      "name": "Google 日本語入力",
+      "description": "Japanese input method editor",
+      "category": "Productivity",
+      "priority": 2,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Google.JapaneseIME",
       "args": []
     },
     {
@@ -108,6 +108,17 @@
       "enabled": true,
       "installMethod": "winget",
       "packageId": "Microsoft.Teams",
+      "args": []
+    },
+    {
+      "id": "zoom",
+      "name": "Zoom",
+      "description": "Video conferencing platform",
+      "category": "Communication",
+      "priority": 2,
+      "enabled": true,
+      "installMethod": "winget",
+      "packageId": "Zoom.Zoom",
       "args": []
     },
     {

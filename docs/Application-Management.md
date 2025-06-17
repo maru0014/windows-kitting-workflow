@@ -9,14 +9,17 @@ Windows Kitting Workflowでは、JSONベースの設定ファイルを使用し�
 
 ### 開発ツール
 - **PowerShell 7**: 最新のPowerShell環境
-- **Windows Terminal**: 高機能ターミナルアプリ
 - **Git**: バージョン管理システム
 - **Visual Studio Code**: コードエディタ
 
 ### ユーティリティ
 - **7-Zip**: ファイル圧縮・展開ツール
-- **Notepad++**: 高機能テキストエディタ
 - **PowerToys**: Microsoft製ユーティリティ集
+
+### 生産性
+- **Sakura Editor**: 軽量日本語対応テキストエディタ
+- **Google 日本語入力**: 日本語入力システム
+- **Adobe Acrobat Reader**: PDF閲覧・編集
 
 ### ブラウザ
 - **Google Chrome**: Webブラウザ
@@ -25,9 +28,9 @@ Windows Kitting Workflowでは、JSONベースの設定ファイルを使用し�
 ### メディア
 - **VLC Media Player**: マルチメディアプレイヤー
 
-### 生産性
+### コミュニケーション
 - **Microsoft Teams**: チームコラボレーション
-- **Adobe Acrobat Reader**: PDF閲覧・編集
+- **Zoom**: ビデオ会議プラットフォーム
 
 ## 設定ファイル: applications.json
 
@@ -168,6 +171,46 @@ EXEファイルを使用したインストール
   "enabled": true,
   "installMethod": "winget",
   "packageId": "SlackTechnologies.Slack"
+}
+```
+
+### 日本語環境に特化したアプリケーション例
+
+```json
+{
+  "id": "sakura-editor",
+  "name": "Sakura Editor",
+  "description": "軽量日本語対応テキストエディタ",
+  "category": "Productivity",
+  "priority": 2,
+  "enabled": true,
+  "installMethod": "winget",
+  "packageId": "SakuraEditor.SakuraEditor"
+},
+{
+  "id": "google-japanese-input",
+  "name": "Google 日本語入力",
+  "description": "日本語入力システム",
+  "category": "Productivity",
+  "priority": 2,
+  "enabled": true,
+  "installMethod": "winget",
+  "packageId": "Google.JapaneseIME"
+}
+```
+
+### ビデオ会議ツールの追加
+
+```json
+{
+  "id": "zoom",
+  "name": "Zoom",
+  "description": "ビデオ会議プラットフォーム",
+  "category": "Communication",
+  "priority": 2,
+  "enabled": true,
+  "installMethod": "winget",
+  "packageId": "Zoom.Zoom"
 }
 ```
 
