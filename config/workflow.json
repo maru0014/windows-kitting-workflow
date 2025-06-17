@@ -291,6 +291,7 @@
         "runAsAdmin": true,
         "parameters": {
           "EnablePIN": false,
+          "PINCode": "123456",
           "Force": false
         },
         "completionCheck": {

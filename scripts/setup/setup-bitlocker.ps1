@@ -5,6 +5,7 @@
 
 param(
 	[switch]$EnablePIN,
+	[string]$PINCode,
 	[switch]$Force,
 	[switch]$DryRun
 )
@@ -35,7 +36,6 @@ function Test-TPMStatus {
 			Write-Log "TPMが検出されませんでした" -Level "ERROR"
 			return $false
 		}
-
 		Write-Log "TPM情報:"
 		Write-Log "  有効状態: $($tpm.TpmEnabled)"
 		Write-Log "  アクティブ状態: $($tpm.TpmActivated)"
@@ -90,7 +90,45 @@ function Get-BitLockerStatus {
 	}
 }
 
-# 通知送信（PINコード設定時の手動対応が必要な場合）
+# BitLockerポリシー設定（PIN使用時）
+function Set-BitLockerPolicy {
+	param(
+		[bool]$EnablePIN = $false
+	)
+
+	try {
+		Write-Log "BitLockerポリシーを設定中..."
+
+		# レジストリパスの作成
+		$registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\FVE"
+		if (-not (Test-Path -LiteralPath $registryPath)) {
+			New-Item $registryPath -Force | Out-Null
+			Write-Log "BitLockerポリシーレジストリキーを作成しました"
+		}
+
+		if ($EnablePIN) {
+			# 基本ポリシー設定
+			New-ItemProperty -LiteralPath $registryPath -Name "EnableBDEWithNoTPM" -PropertyType "DWord" -Value "1" -Force | Out-Null
+			New-ItemProperty -LiteralPath $registryPath -Name "UseAdvancedStartup" -PropertyType "DWord" -Value "1" -Force | Out-Null
+			New-ItemProperty -LiteralPath $registryPath -Name "UseTPM" -PropertyType "DWord" -Value "2" -Force | Out-Null
+			New-ItemProperty -LiteralPath $registryPath -Name "UseTPMKey" -PropertyType "DWord" -Value "0" -Force | Out-Null
+			New-ItemProperty -LiteralPath $registryPath -Name "UseTPMKeyPIN" -PropertyType "DWord" -Value "0" -Force | Out-Null
+			# PIN使用を許可
+			New-ItemProperty -LiteralPath $registryPath -Name "UseTPMPIN" -PropertyType "DWord" -Value "2" -Force | Out-Null
+			# スタートアップの拡張 PIN を許可する
+			New-ItemProperty -LiteralPath $registryPath -Name "UseEnhancedPin" -PropertyType "DWord" -Value "1" -Force | Out-Null
+			Write-Log "✅ BitLocker PIN使用ポリシーを設定しました"
+		}
+
+		return $true
+	}
+	catch {
+		Write-Log "BitLockerポリシー設定中にエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
+		return $false
+	}
+}
+
+# 通知送信
 function Send-BitLockerNotification {
 	param(
 		[string]$Message,
@@ -113,18 +151,11 @@ function Send-BitLockerNotification {
 			"🔐 BitLocker設定完了"
 		}
 
-		$notificationMessage = if ($RequiresUserAction) {
-			"⚠️ **重要**: $Message`n次回再起動時にPINコードの設定が求められます。ユーザーが手動で設定する必要があります。"
-		}
-		else {
-			$Message
-		}
-
-		# Slack webhook通知（シンプル版）
+		# Slack webhook通知
 		if ($notificationConfig.notifications.providers.slack.webhookUrl) {
 			try {
 				$slackPayload = @{
-					text       = "$title`n$notificationMessage"
+					text       = "$title`n$Message"
 					username   = "Windows Kitting Bot"
 					icon_emoji = ":lock:"
 				}
@@ -138,11 +169,11 @@ function Send-BitLockerNotification {
 			}
 		}
 
-		# Teams webhook通知（シンプル版）
+		# Teams webhook通知
 		if ($notificationConfig.notifications.providers.teams.webhookUrl) {
 			try {
 				$teamsPayload = @{
-					text = "$title`n$notificationMessage"
+					text = "$title`n$Message"
 				}
 
 				$jsonPayload = $teamsPayload | ConvertTo-Json
@@ -155,7 +186,7 @@ function Send-BitLockerNotification {
 		}
 
 	}
- catch {
+	catch {
 		Write-Log "通知送信中にエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
 	}
 }
@@ -164,9 +195,9 @@ function Send-BitLockerNotification {
 function Enable-BitLockerEncryption {
 	param(
 		[string]$Drive = "C:",
-		[bool]$UsePIN = $false
+		[bool]$UsePIN = $false,
+		[string]$PIN = ""
 	)
-
 	try {
 		Write-Log "BitLocker暗号化を設定中 (ドライブ: $Drive)..."
 
@@ -174,7 +205,19 @@ function Enable-BitLockerEncryption {
 			Write-Log "[DRY RUN] BitLocker設定をシミュレーション中..."
 			Write-Log "[DRY RUN] ドライブ: $Drive"
 			Write-Log "[DRY RUN] PIN使用: $UsePIN"
+			Write-Log "[DRY RUN] PINコード長: $($PIN.Length)文字"
 			return $true
+		}
+		# 現在のBitLocker状態を確認
+		$currentBLV = Get-BitLockerVolume -MountPoint $Drive -ErrorAction SilentlyContinue
+
+		Write-Log "現在の状態:"
+		if ($currentBLV) {
+			Write-Log "  保護状態: $($currentBLV.ProtectionStatus)"
+			Write-Log "  暗号化率: $($currentBLV.EncryptionPercentage)%"
+		}
+		else {
+			Write-Log "  BitLockerが設定されていません"
 		}
 
 		# 回復キーの保存先を設定
@@ -186,62 +229,151 @@ function Enable-BitLockerEncryption {
 		$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 		$recoveryKeyFile = Join-Path $recoveryKeyPath "bitlocker-recovery-key-$timestamp.txt"
 
-		# BitLocker有効化（TPMプロテクターのみ）
-		Write-Log "BitLockerを有効化中..."
-		Enable-BitLocker -MountPoint $Drive -EncryptionMethod XtsAes256 -TpmProtector
-		# 回復キーの追加
-		Write-Log "回復キーを生成中..."
+		# BitLockerポリシー設定
+		if (-not (Set-BitLockerPolicy -EnablePIN $UsePIN)) {
+			Write-Log "BitLockerポリシー設定に失敗しました" -Level "ERROR"
+			return $false
+		}
+
+		# 既存の回復パスワードキープロテクターを削除（参考コードより）
+		if ($currentBLV -and $currentBLV.KeyProtector) {
+			Write-Log "既存の回復パスワードキープロテクターを確認中..."
+			foreach ($kp in $currentBLV.KeyProtector) {
+				if ($kp.KeyProtectorType -eq "RecoveryPassword") {
+					Write-Log "既存の回復パスワードキープロテクターを削除: $($kp.KeyProtectorId)"
+					Remove-BitLockerKeyProtector -MountPoint $Drive -KeyProtectorId $kp.KeyProtectorId -Confirm:$false
+				}
+			}
+		}
+
+		# 回復パスワードを設定（参考コードより）
+		Write-Log "新しい回復パスワードキープロテクターを追加中..."
 		Add-BitLockerKeyProtector -MountPoint $Drive -RecoveryPasswordProtector | Out-Null
 
-		# 回復キーをファイルに保存
-		$recoveryKey = (Get-BitLockerVolume -MountPoint $Drive).KeyProtector | Where-Object { $_.KeyProtectorType -eq "RecoveryPassword" } | Select-Object -First 1
-		if ($recoveryKey) {
+		# TPMキープロテクターの確認と追加（参考コードより）
+		$updatedBLV = Get-BitLockerVolume -MountPoint $Drive
+		$tpmKP = $updatedBLV.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'Tpm' }
+		if (-not $tpmKP) {
+			Write-Log "TPMキープロテクターを追加中..."
+			Add-BitLockerKeyProtector -MountPoint $Drive -TpmProtector | Out-Null
+		}
+		else {
+			Write-Log "TPMキープロテクターは既に存在します"
+		}
+		if ($UsePIN) {
+			# PIN使用の場合（参考コードより）
+			Write-Log "PIN付きBitLockerを有効化中..."
+
+			if ([string]::IsNullOrEmpty($PIN)) {
+				Write-Log "PINコードが指定されていません。デフォルトPINを使用します" -Level "WARN"
+				$PIN = "123456"  # デフォルトPIN
+			}
+
+			# PINコードを安全な文字列に変換
+			$securePin = ConvertTo-SecureString -String $PIN -AsPlainText -Force
+
+			# TPMの存在確認（参考コードより）
+			$tpm = Get-Tpm
+			if ($tpm.TpmPresent) {
+				# TPM + PIN保護でBitLockerを有効化
+				Enable-BitLocker -MountPoint $Drive -TpmAndPinProtector $securePin -UsedSpaceOnly -SkipHardwareTest
+				Write-Log "✅ TPM + PIN保護でBitLockerを有効化しました"
+			}
+			else {
+				# TPMがない場合はPasswordProtectorで有効化（参考コードより）
+				Write-Log "TPMが利用できないため、パスワード保護で有効化中..."
+				Enable-BitLocker -MountPoint $Drive -PasswordProtector $securePin -UsedSpaceOnly -SkipHardwareTest
+				Write-Log "✅ パスワード保護でBitLockerを有効化しました"
+			}
+			Write-Log "PINコード: $('*' * $PIN.Length) (マスク表示)"
+
+		}
+		else {
+			# PIN使用なしの場合（参考コードより manage-bde を使用）
+			Write-Log "PIN入力なしでBitLockerを有効化中..."
+			# manage-bdeコマンドを使用（参考コードより）
+			& manage-bde -on $Drive -skiphardwaretest | Out-Null
+			if ($LASTEXITCODE -eq 0) {
+				Write-Log "✅ manage-bdeでBitLockerを有効化しました"
+			}
+			else {
+				Write-Log "manage-bdeでの有効化に失敗しました。PowerShellコマンドレットで再試行..." -Level "WARN"
+				Enable-BitLocker -MountPoint $Drive -TpmProtector -UsedSpaceOnly -SkipHardwareTest
+				Write-Log "✅ TPM保護でBitLockerを有効化しました"
+			}
+  }
+
+		# 回復キーをファイルに保存と通知準備（参考コードを基に改良）
+		$finalBLV = Get-BitLockerVolume -MountPoint $Drive
+		$recoveryKeys = $finalBLV.KeyProtector | Where-Object { $_.KeyProtectorType -eq "RecoveryPassword" }
+
+		if ($recoveryKeys) {
+			# プロテクタIDと回復パスワードを取得（参考コードより）
+			$kpid = ($finalBLV.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'RecoveryPassword' }).KeyProtectorId | Out-String
+			$rp = ($finalBLV.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'RecoveryPassword' }).RecoveryPassword | Out-String
+
 			$recoveryInfo = @"
 BitLocker Recovery Key Information
 ==================================
 Computer Name: $env:COMPUTERNAME
 Drive: $Drive
 Date: $(Get-Date -Format 'yyyy/MM/dd HH:mm:ss')
-Recovery Key ID: $($recoveryKey.KeyProtectorId)
-Recovery Password: $($recoveryKey.RecoveryPassword)
+Recovery Keys:
 
+"@
+			foreach ($key in $recoveryKeys) {
+				$recoveryInfo += "Recovery Key ID: $($key.KeyProtectorId)`n"
+				$recoveryInfo += "Recovery Password: $($key.RecoveryPassword)`n`n"
+			}
+
+			$recoveryInfo += @"
 Important: Store this recovery key in a safe location!
 ==================================
 "@
 			$recoveryInfo | Out-File -FilePath $recoveryKeyFile -Encoding UTF8
 			Write-Log "回復キーを保存しました: $recoveryKeyFile"
-		}
 
-		# PIN設定（オプション）
-		if ($UsePIN) {
-			Write-Log "PINプロテクターを追加中..."
+			# 全キープロテクター情報もファイルに保存
+			$allKeysFile = Join-Path $recoveryKeyPath "bitlocker-all-keys-$timestamp.txt"
+			$finalBLV.KeyProtector | Out-File -FilePath $allKeysFile -Encoding UTF8
+			Write-Log "全キープロテクター情報を保存しました: $allKeysFile"
 
-			# PINプロテクターの追加（次回起動時に設定）
-			Add-BitLockerKeyProtector -MountPoint $Drive -TpmAndPinProtector
-
-			Write-Log "⚠️ PINコード設定が有効になりました"
-			Write-Log "⚠️ 次回再起動時にPINコードの設定が求められます"
+			# 通知メッセージを参考コードを基に改良
+			$notificationMessage = "[$env:COMPUTERNAME] BitLocker`r`nプロテクタID: $kpid`r`n回復パスワード: $rp"
 
 			# 通知送信
-			Send-BitLockerNotification -Message "BitLocker暗号化が有効になりました。次回再起動時にPINコードの設定が必要です。" -RequiresUserAction $true
+			if ($UsePIN) {
+				Send-BitLockerNotification -Message $notificationMessage -RequiresUserAction $false
+			}
+			else {
+				Send-BitLockerNotification -Message $notificationMessage -RequiresUserAction $false
+			}
 		}
-		else {
-			Send-BitLockerNotification -Message "BitLocker暗号化が正常に有効になりました。"
-		}
-		# 暗号化は Enable-BitLocker で自動的に開始されます
-		Write-Log "ディスク暗号化が開始されました（バックグラウンドで進行中）"
-
 		# 暗号化状況を確認
 		$bitlockerStatus = Get-BitLockerVolume -MountPoint $Drive
 		Write-Log "暗号化状況: $($bitlockerStatus.EncryptionPercentage)% 完了"
 		Write-Log "保護状態: $($bitlockerStatus.ProtectionStatus)"
+		Write-Log "暗号化方法: $($bitlockerStatus.EncryptionMethod)"
+
+		# 保護状態の確認
+		if ($bitlockerStatus.ProtectionStatus -eq "On") {
+			Write-Log "✅ BitLocker保護が正常に有効です"
+		}
+		elseif ($bitlockerStatus.ProtectionStatus -eq "Suspended") {
+			Write-Log "⚠️ BitLocker保護が一時停止されています。再開を試行中..." -Level "WARN"
+			Resume-BitLocker -MountPoint $Drive
+			Start-Sleep -Seconds 3
+			$finalStatus = Get-BitLockerVolume -MountPoint $Drive
+			Write-Log "保護状態を更新: $($finalStatus.ProtectionStatus)"
+		}
 
 		Write-Log "✅ BitLocker設定が完了しました"
 		return $true
 
 	}
- catch {
+	catch {
 		Write-Log "BitLocker有効化中にエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
+		Write-Log "エラー詳細: $($_.Exception.ToString())" -Level "ERROR"
 		return $false
 	}
 }
@@ -318,7 +450,7 @@ function Main {
 		}
 
 		# BitLocker有効化実行
-		$result = Enable-BitLockerEncryption -Drive $systemDrive -UsePIN $EnablePIN.IsPresent
+		$result = Enable-BitLockerEncryption -Drive $systemDrive -UsePIN $EnablePIN.IsPresent -PIN $PINCode
 
 		if ($result) {
 			Write-Log "BitLocker設定が正常に完了しました"
@@ -339,7 +471,7 @@ function Main {
 		}
 
 	}
- catch {
+	catch {
 		Write-Log "予期しないエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
 		Write-Log "スタックトレース: $($_.ScriptStackTrace)" -Level "ERROR"
 		exit 1
