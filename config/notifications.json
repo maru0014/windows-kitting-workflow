@@ -60,15 +60,27 @@
       },
       "onWorkflowComplete": {
         "enabled": true,
-        "message": "🎉 Windows Kitting Workflow完了: {machineName}のWindows 11セットアップが完了しました！\n総実行時間: {duration}\n完了したステップ: {completedSteps}/{totalSteps}"
+        "message": "🎉 Windows Kitting Workflow完了: {machineName}のWindows 11セットアップが完了しました！\n\n📊 実行時間統計:\n- 今回セッション: {sessionDuration}\n- 総実行時間: {totalDuration}\n\n✅ 完了したステップ: {completedSteps}/{totalSteps}"
       },
       "onWorkflowError": {
         "enabled": true,
-        "message": "💥 Windows Kitting Workflowエラー: {machineName}でワークフローが停止しました\nエラー: {errorMessage}\nログファイル: {logPath}"
+        "message": "💥 Windows Kitting Workflowエラー: {machineName}でワークフローが停止しました\n\nエラー: {errorMessage}\n\nログファイル: {logPath}"
       },
       "onWorkflowCanceled": {
         "enabled": true,
-        "message": "⚠️ Windows Kitting Workflowキャンセル: {machineName}でワークフローがキャンセルされました\nキャンセル理由: {cancelReason}"
+        "message": "⚠️ Windows Kitting Workflowキャンセル: {machineName}でワークフローがキャンセルされました\n\nキャンセル理由: {cancelReason}"
+      },
+      "onWorkflowSuccess": {
+        "enabled": true,
+        "message": "🎉 Windows Kitting Workflow最終成功: {machineName}のセットアップが全て完了しました！\n\n📊 実行時間統計:\n- 今回セッション: {sessionDuration}\n- 総実行時間: {totalDuration}\n\n📂 ログファイル: {logPath}"
+      },
+      "onWorkflowFailure": {
+        "enabled": true,
+        "message": "❌ Windows Kitting Workflow最終失敗: {machineName}でワークフローが失敗しました\n\n📊 実行時間統計:\n- 今回セッション: {sessionDuration}\n- 総実行時間: {totalDuration}\n\n📂 ログファイル: {logPath}\n\n🚨 エラーログ: {errorLogPath}"
+      },
+      "onWorkflowCriticalError": {
+        "enabled": true,
+        "message": "🆘 Windows Kitting Workflow致命的エラー: {machineName}で回復不能なエラーが発生しました\n\n❌ エラー: {errorMessage}\n\n📊 実行時間統計:\n- 今回セッション: {sessionDuration}\n- 総実行時間: {totalDuration}\n\n📂 ログファイル: {logPath}\n\n🚨 エラーログ: {errorLogPath}"
       }
     },
     "templates": {
