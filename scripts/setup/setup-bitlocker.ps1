@@ -189,10 +189,9 @@ function Enable-BitLockerEncryption {
 		# BitLocker有効化（TPMプロテクターのみ）
 		Write-Log "BitLockerを有効化中..."
 		Enable-BitLocker -MountPoint $Drive -EncryptionMethod XtsAes256 -TpmProtector
-
 		# 回復キーの追加
 		Write-Log "回復キーを生成中..."
-		$recoveryProtector = Add-BitLockerKeyProtector -MountPoint $Drive -RecoveryPasswordProtector
+		Add-BitLockerKeyProtector -MountPoint $Drive -RecoveryPasswordProtector | Out-Null
 
 		# 回復キーをファイルに保存
 		$recoveryKey = (Get-BitLockerVolume -MountPoint $Drive).KeyProtector | Where-Object { $_.KeyProtectorType -eq "RecoveryPassword" } | Select-Object -First 1
@@ -229,10 +228,13 @@ Important: Store this recovery key in a safe location!
 		else {
 			Send-BitLockerNotification -Message "BitLocker暗号化が正常に有効になりました。"
 		}
+		# 暗号化は Enable-BitLocker で自動的に開始されます
+		Write-Log "ディスク暗号化が開始されました（バックグラウンドで進行中）"
 
-		# 暗号化開始
-		Write-Log "ディスク暗号化を開始中..."
-		Start-BitLockerEncryption -MountPoint $Drive
+		# 暗号化状況を確認
+		$bitlockerStatus = Get-BitLockerVolume -MountPoint $Drive
+		Write-Log "暗号化状況: $($bitlockerStatus.EncryptionPercentage)% 完了"
+		Write-Log "保護状態: $($bitlockerStatus.ProtectionStatus)"
 
 		Write-Log "✅ BitLocker設定が完了しました"
 		return $true
@@ -240,6 +242,34 @@ Important: Store this recovery key in a safe location!
 	}
  catch {
 		Write-Log "BitLocker有効化中にエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
+		return $false
+	}
+}
+
+# BitLockerモジュールの確認とロード
+function Import-BitLockerModule {
+	try {
+		Write-Log "BitLockerモジュールを確認中..."
+
+		# BitLockerモジュールが利用可能か確認
+		$bitlockerModule = Get-Module -Name BitLocker -ListAvailable
+		if (-not $bitlockerModule) {
+			Write-Log "BitLockerモジュールが見つかりません。Windows Proまたは企業版が必要です" -Level "ERROR"
+			return $false
+		}
+
+		# BitLockerモジュールをインポート
+		Import-Module BitLocker -Force
+		Write-Log "BitLockerモジュールをロードしました"
+
+		# 利用可能なコマンドレットを確認
+		$commands = Get-Command -Module BitLocker | Select-Object -First 5
+		Write-Log "利用可能なBitLockerコマンド例: $($commands.Name -join ', ')..."
+
+		return $true
+	}
+	catch {
+		Write-Log "BitLockerモジュールの読み込み中にエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
 		return $false
 	}
 }
@@ -253,11 +283,16 @@ function Main {
 		Write-Log "PINコード有効: $EnablePIN"
 		Write-Log "強制実行: $Force"
 		Write-Log "ドライラン: $DryRun"
-
 		# 管理者権限チェック
 		$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 		if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
 			Write-Log "このスクリプトは管理者権限で実行する必要があります" -Level "ERROR"
+			exit 1
+		}
+
+		# BitLockerモジュール確認
+		if (-not (Import-BitLockerModule)) {
+			Write-Log "BitLockerモジュールが利用できません" -Level "ERROR"
 			exit 1
 		}
 
