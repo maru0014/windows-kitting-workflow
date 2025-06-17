@@ -7,7 +7,8 @@ param(
 	[switch]$EnablePIN,
 	[string]$PINCode,
 	[switch]$Force,
-	[switch]$DryRun
+	[switch]$DryRun,
+	[switch]$NotifyRecoveryPassword
 )
 
 # 共通ログ関数の読み込み
@@ -319,8 +320,15 @@ Important: Store this recovery key in a safe location!
 			$finalBLV.KeyProtector | Out-File -FilePath $allKeysFile -Encoding UTF8
 			Write-Log "全キープロテクター情報を保存しました: $allKeysFile"
 
-			# 通知メッセージを参考コードを基に改良
-			$notificationMessage = "[$env:COMPUTERNAME] BitLocker`r`nプロテクタID: $kpid`r`n回復パスワード: $rp"
+			# 通知メッセージを作成
+			if ($NotifyRecoveryPassword) {
+				# 回復パスワードを含む詳細通知
+				$notificationMessage = "[$env:COMPUTERNAME] BitLocker設定完了`r`nプロテクタID: $kpid`r`n回復パスワード: $rp`r`nバックアップファイル: $recoveryKeyFile"
+			}
+			else {
+				# バックアップファイルパスのみ通知
+				$notificationMessage = "[$env:COMPUTERNAME] BitLocker設定完了`r`n回復パスワードはファイルに保存されました`r`nバックアップファイル: $recoveryKeyFile"
+			}
 
 			# 通知送信
 			if ($UsePIN) {
@@ -396,6 +404,7 @@ function Main {
 		Write-Log "PINコード有効: $EnablePIN"
 		Write-Log "強制実行: $Force"
 		Write-Log "ドライラン: $DryRun"
+		Write-Log "回復パスワード通知: $NotifyRecoveryPassword"
 
 		# パラメータバリデーション
 		if ($EnablePIN -and [string]::IsNullOrWhiteSpace($PINCode)) {

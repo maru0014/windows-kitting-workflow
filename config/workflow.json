@@ -285,14 +285,15 @@
       {
         "id": "setup-bitlocker",
         "name": "BitLocker暗号化設定",
-        "description": "システムドライブのBitLocker暗号化を設定（PINCode空文字列時は実行時指定またはPIN無効）",
+        "description": "システムドライブのBitLocker暗号化を設定（PINCode空文字列時は実行時指定またはPIN無効、NotifyRecoveryPasswordで通知内容制御）",
         "script": "scripts/setup/setup-bitlocker.ps1",
         "type": "powershell",
         "runAsAdmin": true,
         "parameters": {
           "EnablePIN": false,
           "PINCode": "",
-          "Force": false
+          "Force": false,
+          "NotifyRecoveryPassword": false
         },
         "completionCheck": {
           "type": "file",

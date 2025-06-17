@@ -59,6 +59,7 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
 | `EnablePIN` | PINコード認証を有効にする | `false` |
 | `PINCode` | 設定するPINコード（4-20桁の数字）<br/>**セキュリティ注意**: 本番環境では空文字列にして実行時指定推奨 | `""` (空文字列) |
 | `Force` | 既に暗号化済みでも再設定する | `false` |
+| `NotifyRecoveryPassword` | 回復パスワードをチャット通知に含める<br/>**false**: バックアップファイルパスのみ通知<br/>**true**: 回復パスワードも含めて通知 | `false` |
 
 ## 使用例
 
@@ -67,7 +68,9 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
 ```json
 "parameters": {
   "EnablePIN": false,
-  "Force": false
+  "PINCode": "",
+  "Force": false,
+  "NotifyRecoveryPassword": false
 }
 ```
 
@@ -75,6 +78,7 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
 - 起動時に自動でロック解除
 - ユーザーの手動操作は不要
 - 企業環境での一括展開に適している
+- 回復パスワードはファイルのみに保存（チャット通知なし）
 
 ### 高セキュリティ暗号化（TPM + PIN）
 
@@ -82,7 +86,8 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
 "parameters": {
   "EnablePIN": true,
   "PINCode": "",
-  "Force": false
+  "Force": false,
+  "NotifyRecoveryPassword": true
 }
 ```
 
@@ -90,6 +95,25 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
 - ⚠️ **重要**: PINCodeが空の場合、実行時にエラーが発生します
 - 起動時にPIN入力が必要
 - より高いセキュリティレベル
+- 回復パスワードをチャット通知に含める（管理者向け）
+
+### 通知設定例
+
+#### セキュリティ重視（本番環境推奨）
+```json
+"NotifyRecoveryPassword": false
+```
+- 回復パスワードはファイルのみに保存
+- チャット通知にはバックアップファイルパスのみ表示
+- 情報漏洩リスクを最小化
+
+#### 管理効率重視（テスト環境向け）
+```json
+"NotifyRecoveryPassword": true
+```
+- 回復パスワードを直接チャット通知
+- 即座に回復パスワードを確認可能
+- ⚠️ チャット履歴に機密情報が残るため注意
 
 ## 前提条件
 
