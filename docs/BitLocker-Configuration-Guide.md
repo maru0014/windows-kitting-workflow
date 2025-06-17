@@ -33,9 +33,9 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
   "description": "システムドライブのBitLocker暗号化を設定",
   "script": "scripts/setup/setup-bitlocker.ps1",
   "type": "powershell",
-  "runAsAdmin": true,
-  "parameters": {
+  "runAsAdmin": true,  "parameters": {
     "EnablePIN": false,
+    "PINCode": "",
     "Force": false
   },
   "completionCheck": {
@@ -57,6 +57,7 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
 | パラメータ | 説明 | デフォルト |
 |-----------|------|-----------|
 | `EnablePIN` | PINコード認証を有効にする | `false` |
+| `PINCode` | 設定するPINコード（4-20桁の数字）<br/>**セキュリティ注意**: 本番環境では空文字列にして実行時指定推奨 | `""` (空文字列) |
 | `Force` | 既に暗号化済みでも再設定する | `false` |
 
 ## 使用例
@@ -80,12 +81,13 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
 ```json
 "parameters": {
   "EnablePIN": true,
+  "PINCode": "",
   "Force": false
 }
 ```
 
 この設定では：
-- ⚠️ **重要**: 次回再起動時にPINコードの設定が必要
+- ⚠️ **重要**: PINCodeが空の場合、実行時にエラーが発生します
 - 起動時にPIN入力が必要
 - より高いセキュリティレベル
 
@@ -113,9 +115,25 @@ BitLocker設定は以下の順序で実行されます：
 
 1. **基本セットアップ完了後**: アプリインストール、レジストリ設定等
 2. **デスクトップファイル配置後**: ユーザー環境設定完了後
-3. **クリーンアップ前**: 最終段階での暗号化実行
+3. **BitLocker暗号化実行**: システム安定後の暗号化
+4. **クリーンアップ実行**: BitLocker完了後の最終処理
 
-この順序により、システム設定が安定した状態で暗号化を行います。
+### 依存関係の設計意図
+
+```json
+// BitLocker設定
+"dependsOn": ["deploy-desktop-files"]
+
+// クリーンアップ
+"dependsOn": ["setup-bitlocker"]
+```
+
+**変更理由**:
+- BitLocker暗号化は重要なセキュリティ処理のため、完了を確認してからクリーンアップを実行
+- 暗号化中にシステムファイルが削除されることを防止
+- エラー発生時の復旧作業を容易にするため
+
+この順序により、システム設定が安定した状態で暗号化を行い、暗号化完了後に安全にクリーンアップを実行します。
 
 ## セキュリティ機能
 
