@@ -1405,7 +1405,6 @@ try {
 			logPath         = $Global:LogPath
 			errorLogPath    = $Global:ErrorLogPath
 			computerName    = $env:COMPUTERNAME
-			<# Action when this condition is true #>
 		}
 
 		Write-Host "✗ ワークフローがエラーで終了しました" -ForegroundColor Red
