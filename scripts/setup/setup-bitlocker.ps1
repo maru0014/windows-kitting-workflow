@@ -283,12 +283,6 @@ function Main {
 		Write-Log "PINコード有効: $EnablePIN"
 		Write-Log "強制実行: $Force"
 		Write-Log "ドライラン: $DryRun"
-		# 管理者権限チェック
-		$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-		if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-			Write-Log "このスクリプトは管理者権限で実行する必要があります" -Level "ERROR"
-			exit 1
-		}
 
 		# BitLockerモジュール確認
 		if (-not (Import-BitLockerModule)) {
