@@ -288,10 +288,9 @@
         "description": "システムドライブのBitLocker暗号化を設定",
         "script": "scripts/setup/setup-bitlocker.ps1",
         "type": "powershell",
-        "runAsAdmin": true,
-        "parameters": {
+        "runAsAdmin": true,        "parameters": {
           "EnablePIN": false,
-          "PINCode": "123456",
+          "PINCode": "",
           "Force": false
         },
         "completionCheck": {

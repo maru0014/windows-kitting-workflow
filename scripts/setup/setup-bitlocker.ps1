@@ -397,6 +397,14 @@ function Main {
 		Write-Log "強制実行: $Force"
 		Write-Log "ドライラン: $DryRun"
 
+		# パラメータバリデーション
+		if ($EnablePIN -and [string]::IsNullOrWhiteSpace($PINCode)) {
+			Write-Log "EnablePINが有効ですが、PINCodeが設定されていません" -Level "ERROR"
+			Write-Log "PINコードを設定するか、EnablePINを無効にしてください" -Level "ERROR"
+			Send-WorkflowNotification -Message "BitLocker設定エラー: PINコードが未設定" -Title "設定エラー" -Level "Error"
+			exit 1
+		}
+
 		# BitLockerモジュール確認
 		if (-not (Import-BitLockerModule)) {
 			Write-Log "BitLockerモジュールが利用できません" -Level "ERROR"
