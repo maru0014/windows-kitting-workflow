@@ -33,6 +33,14 @@ Windowsレジストリ設定の詳細説明
 - カスタマイズ例
 - トラブルシューティング
 
+### 🔐 [BitLocker設定ガイド](BitLocker-Configuration-Guide.md)
+BitLocker暗号化の自動設定
+- TPMベースの暗号化設定
+- PIN認証オプション
+- 回復キーの自動管理
+- セキュリティ考慮事項
+- トラブルシューティング
+
 ### ⚙️ [カスタマイズガイド](Customization-Guide.md)
 ワークフローのカスタマイズ方法
 - workflow.json設定の詳細
@@ -125,7 +133,8 @@ WorkflowRoot取得処理の改善実装
 3. [Windows Updateガイド](Windows-Update-Guide.md) - Windows Update設定の詳細
 4. [レジストリ設定ガイド](Registry-Configuration.md) - レジストリ設定の追加
 5. [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) - Wi-Fi自動設定の詳細
-6. [Slackスレッドガイド](Slack-Thread-Guide.md) - Slack通知の設定
+6. [共通通知ライブラリ](Common-Notification-Library.md) - 通知機能のカスタマイズ
+7. [Slackスレッドガイド](Slack-Thread-Guide.md) - Slack通知の設定
 
 ### 🔧 問題が発生した場合
 1. [トラブルシューティングガイド](Troubleshooting.md) - 問題解決方法
@@ -133,12 +142,13 @@ WorkflowRoot取得処理の改善実装
 3. [自動ログインREADME](AutoLogin-README.md) - 自動ログイン問題の場合
 
 ### 👨‍💻 開発・保守担当者
-1. [テスト・診断ガイド](Testing-Guide.md) - テストツールの理解
-2. [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) - 共通処理の理解
-3. [Teams通知機能強化](Teams-Notifications-Enhancement.md) - Teams通知の実装
-4. [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md) - アダプティブカード詳細
-5. [カスタマイズガイド](Customization-Guide.md) - 高度なカスタマイズ
-6. [トラブルシューティングガイド](Troubleshooting.md) - サポート対応
+1. [共通通知ライブラリ](Common-Notification-Library.md) - 通知機能の共通化アーキテクチャ
+2. [テスト・診断ガイド](Testing-Guide.md) - テストツールの理解
+3. [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) - 共通処理の理解
+4. [Teams通知機能強化](Teams-Notifications-Enhancement.md) - Teams通知の実装
+5. [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md) - アダプティブカード詳細
+6. [カスタマイズガイド](Customization-Guide.md) - 高度なカスタマイズ
+7. [トラブルシューティングガイド](Troubleshooting.md) - サポート対応
 
 ## ドキュメント間の関連性
 
