@@ -84,7 +84,7 @@ if ($Help) {
 function Write-Log {
 	param(
 		[string]$Message,
-		[ValidateSet("INFO", "WARN", "ERROR")]
+		[ValidateSet("DEBUG", "INFO", "WARN", "ERROR")]
 		[string]$Level = "INFO",
 		[bool]$NoConsoleOutput = $script:Quiet
 	)
@@ -283,7 +283,8 @@ function Install-MsiPackage {
 	)
 
 	try {
-		Write-Log "─────────────────────────────────────"		Write-Log "🔄 MSIパッケージをインストール中: $($App.name)"
+		Write-Log "─────────────────────────────────────"
+		Write-Log "🔄 MSIパッケージをインストール中: $($App.name)"
 		Write-Log "   ファイル: $($App.installerPath)"
 		Write-Log "   カテゴリ: $($App.category) | 優先度: $($App.priority)"
 
@@ -342,7 +343,8 @@ function Install-ExePackage {
 	)
 
 	try {
-		Write-Log "─────────────────────────────────────"		Write-Log "🔄 EXEパッケージをインストール中: $($App.name)"
+		Write-Log "─────────────────────────────────────"
+		Write-Log "🔄 EXEパッケージをインストール中: $($App.name)"
 		Write-Log "   ファイル: $($App.installerPath)"
 		Write-Log "   カテゴリ: $($App.category) | 優先度: $($App.priority)"
 
