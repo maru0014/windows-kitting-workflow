@@ -21,8 +21,7 @@
       "installMethod": "winget",
       "packageId": "Git.Git",
       "args": []
-    },
-    {
+    },    {
       "id": "vscode",
       "name": "Visual Studio Code",
       "description": "Lightweight code editor",
@@ -31,17 +30,6 @@
       "enabled": true,
       "installMethod": "winget",
       "packageId": "Microsoft.VisualStudioCode",
-      "args": []
-    },
-    {
-      "id": "sakura-editor",
-      "name": "Sakura Editor",
-      "description": "Lightweight Japanese text editor",
-      "category": "Productivity",
-      "priority": 2,
-      "enabled": true,
-      "installMethod": "winget",
-      "packageId": "SakuraEditor.SakuraEditor",
       "args": []
     },
     {

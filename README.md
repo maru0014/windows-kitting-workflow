@@ -106,7 +106,7 @@ windows-kitting-workflow/
 ### 基本アプリケーション
 - **開発ツール**: PowerShell 7, Git, Visual Studio Code
 - **ユーティリティ**: 7-Zip, PowerToys  
-- **生産性**: Sakura Editor, Google 日本語入力, Adobe Acrobat Reader
+- **生産性**: Google 日本語入力, Adobe Acrobat Reader
 - **ブラウザ**: Google Chrome, Mozilla Firefox
 - **メディア**: VLC Media Player
 - **コミュニケーション**: Microsoft Teams, Zoom
