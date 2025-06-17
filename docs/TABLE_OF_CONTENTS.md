@@ -18,18 +18,20 @@
 4. **[Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md)** - Wi-Fi自動設定
 
 ### 🔔 通知機能を設定したい方
-1. **[Slackスレッドガイド](Slack-Thread-Guide.md)** - Slack通知の基本設定
-2. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - Teams通知の基本実装
-3. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - 高度なTeams通知
+1. **[共通通知ライブラリ](Common-Notification-Library.md)** - 通知機能の共通化実装
+2. **[Slackスレッドガイド](Slack-Thread-Guide.md)** - Slack通知の基本設定
+3. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - Teams通知の基本実装
+4. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - 高度なTeams通知
 
 ### 🧪 テスト・診断を行いたい方
 1. **[テスト・診断ガイド](Testing-Guide.md)** - テストツールの使用方法
 2. **[トラブルシューティングガイド](Troubleshooting.md)** - 問題の診断と解決
 
 ### 🔧 開発・保守担当者
-1. **[WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md)** - 共通処理の実装詳細
-2. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - 通知機能の技術詳細
-3. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - アダプティブカード技術詳細
+1. **[共通通知ライブラリ](Common-Notification-Library.md)** - 通知機能の共通化アーキテクチャ
+2. **[WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md)** - 共通処理の実装詳細
+3. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - 通知機能の技術詳細
+4. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - アダプティブカード技術詳細
 
 ## 📂 機能別ドキュメント一覧
 
@@ -46,6 +48,7 @@
 ### 🔔 通知・連携機能
 | ドキュメント | 対象者 | 内容 |
 |-------------|--------|------|
+| [共通通知ライブラリ](Common-Notification-Library.md) | 開発者 | 通知機能の共通化と統一化 |
 | [Slackスレッドガイド](Slack-Thread-Guide.md) | 中級者 | Slack通知機能の詳細 |
 | [Teams通知機能強化](Teams-Notifications-Enhancement.md) | 開発者 | Teams通知の基本実装 |
 | [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md) | 開発者 | 高度なTeams通知実装 |

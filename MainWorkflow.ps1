@@ -15,6 +15,9 @@ param(
 	[switch]$DryRun
 )
 
+# 共通通知関数の読み込み
+. (Join-Path $PSScriptRoot "scripts\Common-NotificationFunctions.ps1")
+
 # グローバル変数
 $Global:WorkflowConfig = $null
 $Global:NotificationConfig = $null
@@ -235,6 +238,14 @@ function Read-Configuration {
 		Write-Log "設定ファイルを正常に読み込みました"
 		Write-Log "ワークフロー名: $($Global:WorkflowConfig.workflow.name)"
 		Write-Log "ステップ数: $($Global:WorkflowConfig.workflow.steps.Count)"
+
+		# 共通通知ライブラリを初期化
+		if (-not (Import-NotificationConfig -ConfigPath $NotificationConfigPath)) {
+			Write-Log "共通通知ライブラリの初期化に失敗しました" -Level "WARN"
+		}
+		else {
+			Write-Log "共通通知ライブラリを初期化しました"
+		}
 
 	}
  catch {
@@ -650,7 +661,9 @@ function Send-TeamsNotification {
 		if (-not $teamsConfig.flowUrl -or $teamsConfig.flowUrl -eq "https://your-teams-flow-url-here") {
 			Write-Log "Teams Flow URLが設定されていません" -Level "WARN"
 			return
-		}		# シリアル番号-PC名をプレフィックスとして追加
+		}
+
+		# シリアル番号-PC名をプレフィックスとして追加
 		$serialNumber = Get-PCSerialNumber
 		$pcName = $env:COMPUTERNAME
 		$prefixedMessage = "**[$serialNumber-$pcName]**`r`n`r`n$Message"
@@ -694,7 +707,7 @@ function Send-TeamsNotification {
 		}
 
 		# スレッドTS管理ファイルのパス（Teamsは独自のファイル）
-		$threadTsFile = if ($threadConfig.tsStoragePath) {
+		$threadTsFile =	if ($threadConfig.tsStoragePath) {
 			Join-Path $PSScriptRoot $threadConfig.tsStoragePath
 		}
 		else {

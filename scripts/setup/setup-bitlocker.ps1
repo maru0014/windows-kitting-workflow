@@ -14,12 +14,14 @@ param(
 . (Join-Path (Split-Path $PSScriptRoot -Parent) "Common-LogFunctions.ps1")
 # ヘルパー関数の読み込み
 . (Join-Path (Split-Path $PSScriptRoot -Parent) "Common-WorkflowHelpers.ps1")
+# 共通通知関数の読み込み
+. (Join-Path (Split-Path $PSScriptRoot -Parent) "Common-NotificationFunctions.ps1")
 
 # ログ関数
 function Write-Log {
 	param(
 		[string]$Message,
-		[ValidateSet("INFO", "WARN", "ERROR")]
+		[ValidateSet("DEBUG", "INFO", "WARN", "ERROR")]
 		[string]$Level = "INFO"
 	)
 
@@ -128,7 +130,7 @@ function Set-BitLockerPolicy {
 	}
 }
 
-# 通知送信
+# BitLocker通知送信（共通ライブラリ使用）
 function Send-BitLockerNotification {
 	param(
 		[string]$Message,
@@ -136,12 +138,11 @@ function Send-BitLockerNotification {
 	)
 
 	try {
-		# 通知設定を読み込み
-		$notificationConfig = Get-WorkflowConfig -ConfigType "notifications"
-
-		if (-not $notificationConfig) {
-			Write-Log "通知設定が見つかりません" -Level "WARN"
-			return
+		# 通知設定を初期化
+		$notificationConfigPath = Get-WorkflowPath -PathType "Config" -SubPath "notifications.json"
+		if (-not (Import-NotificationConfig -ConfigPath $notificationConfigPath)) {
+			Write-Log "通知設定の読み込みに失敗しました" -Level "WARN"
+			return $false
 		}
 
 		$title = if ($RequiresUserAction) {
@@ -151,43 +152,23 @@ function Send-BitLockerNotification {
 			"🔐 BitLocker設定完了"
 		}
 
-		# Slack webhook通知
-		if ($notificationConfig.notifications.providers.slack.webhookUrl) {
-			try {
-				$slackPayload = @{
-					text       = "$title`n$Message"
-					username   = "Windows Kitting Bot"
-					icon_emoji = ":lock:"
-				}
+		$fullMessage = "$title`n$Message"
 
-				$jsonPayload = $slackPayload | ConvertTo-Json
-				Invoke-RestMethod -Uri $notificationConfig.notifications.providers.slack.webhookUrl -Method POST -Body $jsonPayload -ContentType "application/json"
-				Write-Log "Slack通知を送信しました" -Level "DEBUG"
-			}
-			catch {
-				Write-Log "Slack通知送信に失敗しました: $($_.Exception.Message)" -Level "WARN"
-			}
+		# 共通通知関数を使用してSlackとTeams両方に送信
+		$result = Send-Notification -EventType "onBitLockerComplete" -CustomMessage $fullMessage
+
+		if ($result) {
+			Write-Log "BitLocker通知を送信しました" -Level "DEBUG"
+		}
+		else {
+			Write-Log "BitLocker通知の送信に失敗しました" -Level "WARN"
 		}
 
-		# Teams webhook通知
-		if ($notificationConfig.notifications.providers.teams.webhookUrl) {
-			try {
-				$teamsPayload = @{
-					text = "$title`n$Message"
-				}
-
-				$jsonPayload = $teamsPayload | ConvertTo-Json
-				Invoke-RestMethod -Uri $notificationConfig.notifications.providers.teams.webhookUrl -Method POST -Body $jsonPayload -ContentType "application/json"
-				Write-Log "Teams通知を送信しました" -Level "DEBUG"
-			}
-			catch {
-				Write-Log "Teams通知送信に失敗しました: $($_.Exception.Message)" -Level "WARN"
-			}
-		}
-
+		return $result
 	}
 	catch {
-		Write-Log "通知送信中にエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
+		Write-Log "BitLocker通知送信中にエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
+		return $false
 	}
 }
 

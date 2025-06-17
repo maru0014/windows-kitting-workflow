@@ -194,6 +194,7 @@ powershell -ExecutionPolicy Bypass -File "main.bat"
 - **[自動ログインREADME](docs/AutoLogin-README.md)**: 自動ログイン機能の詳細
 
 ### 🔧 技術実装詳細（開発者向け）
+- **[共通通知ライブラリ](docs/Common-Notification-Library.md)**: 通知機能の共通化とアーキテクチャ
 - **[Teams通知機能強化](docs/Teams-Notifications-Enhancement.md)**: Teams通知機能の改善実装詳細
 - **[Teamsアダプティブカード実装](docs/Teams-Adaptive-Cards-Implementation.md)**: アダプティブカード対応実装
 - **[WorkflowRoot改善ガイド](docs/WorkflowRoot-Improvement-Guide.md)**: 共通処理改善の実装詳細
