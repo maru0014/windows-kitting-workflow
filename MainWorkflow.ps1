@@ -128,6 +128,27 @@ function Write-LogToFile {
 	}
 }
 
+# ワークフロー実行時間を計算するヘルパー関数
+function Get-WorkflowDurations {
+	param(
+		[DateTime]$CurrentTime = (Get-Date)
+	)
+
+	$totalDuration = if ($Global:WorkflowInitialStartTime) {
+		New-TimeSpan -Start $Global:WorkflowInitialStartTime -End $CurrentTime
+	}
+	else {
+		New-TimeSpan -Start $Global:WorkflowStartTime -End $CurrentTime
+	}
+
+	$sessionDuration = New-TimeSpan -Start $Global:WorkflowStartTime -End $CurrentTime
+
+	return @{
+		Total   = $totalDuration
+		Session = $sessionDuration
+	}
+}
+
 # 設定ファイル読み込み
 function Read-Configuration {
 	param(
@@ -1265,17 +1286,12 @@ Status: Initial workflow start notification sent
 				Write-Log "実行可能なステップがありません。依存関係を確認してください。" -Level "ERROR"
 				break
 			}
-		}		# 完了通知（総実行時間を正確に計算）
-		$totalDuration = if ($Global:WorkflowInitialStartTime) {
-			New-TimeSpan -Start $Global:WorkflowInitialStartTime -End (Get-Date)
 		}
-		else {
-			New-TimeSpan -Start $Global:WorkflowStartTime -End (Get-Date)
-		}
-		$sessionDuration = New-TimeSpan -Start $Global:WorkflowStartTime -End (Get-Date)
+		# 完了通知（総実行時間を正確に計算）
+		$durations = Get-WorkflowDurations
 		Send-Notification -EventType "onWorkflowComplete" -Variables @{
-			totalDuration   = $totalDuration.ToString()
-			sessionDuration = $sessionDuration.ToString()
+			totalDuration   = $durations.Total.ToString()
+			sessionDuration = $durations.Session.ToString()
 			completedSteps  = $completedSteps.Count
 			totalSteps      = $totalSteps
 			failedSteps     = $failedSteps.Count
@@ -1283,8 +1299,8 @@ Status: Initial workflow start notification sent
 		}
 		Write-Log "ワークフロー完了"
 		Write-Log "完了ステップ: $($completedSteps.Count)/$totalSteps"
-		Write-Log "今回セッション実行時間: $($sessionDuration.ToString())"
-		Write-Log "総実行時間（初回開始から）: $($totalDuration.ToString())"
+		Write-Log "今回セッション実行時間: $($durations.Session.ToString())"
+		Write-Log "総実行時間（初回開始から）: $($durations.Total.ToString())"
 
 		# すべての工程が完了した場合の処理
 		if ($failedSteps.Count -eq 0) {
@@ -1356,12 +1372,14 @@ try {
 			New-Item -ItemType Directory -Path $_ -Force | Out-Null
 		}
 	}
-
 	# 設定読み込み
 	Read-Configuration -ConfigPath $ConfigPath -NotificationConfigPath $NotificationConfigPath
 
 	# ワークフロー実行
 	$exitCode = Start-MainWorkflow
+
+	# 実行時間を正確に計算
+	$durations = Get-WorkflowDurations
 
 	# 結果の表示とユーザー確認
 	Write-Host ""
@@ -1369,15 +1387,6 @@ try {
 	Write-Host "Windows Kitting Workflow 実行結果" -ForegroundColor Cyan
 	Write-Host "========================================" -ForegroundColor Cyan
 
-	# 実行時間を正確に計算
-	$totalDuration = if ($Global:WorkflowInitialStartTime) {
-		New-TimeSpan -Start $Global:WorkflowInitialStartTime -End (Get-Date)
-	}
- else {
-		New-TimeSpan -Start $Global:WorkflowStartTime -End (Get-Date)
-	}
-
-	$sessionDuration = New-TimeSpan -Start $Global:WorkflowStartTime -End (Get-Date)
 
 	Read-Host "ワークフローの実行結果は $exitCode です。"
 
@@ -1387,8 +1396,8 @@ try {
 		Write-Host "  ログファイルが自動的に開かれました。" -ForegroundColor Green
 		# 成功時の通知送信
 		Send-Notification -EventType "onWorkflowSuccess" -Variables @{
-			totalDuration   = $totalDuration.ToString()
-			sessionDuration = $sessionDuration.ToString()
+			totalDuration   = $durations.Total.ToString()
+			sessionDuration = $durations.Session.ToString()
 			logPath         = $Global:LogPath
 			computerName    = $env:COMPUTERNAME
 		}
@@ -1400,11 +1409,12 @@ try {
 
 		# 失敗時の通知送信
 		Send-Notification -EventType "onWorkflowFailure" -Variables @{
-			totalDuration   = $totalDuration.ToString()
-			sessionDuration = $sessionDuration.ToString()
+			totalDuration   = $durations.Total.ToString()
+			sessionDuration = $durations.Session.ToString()
 			logPath         = $Global:LogPath
 			errorLogPath    = $Global:ErrorLogPath
 			computerName    = $env:COMPUTERNAME
+			<# Action when this condition is true #>
 		}
 
 		Write-Host "✗ ワークフローがエラーで終了しました" -ForegroundColor Red
@@ -1412,8 +1422,8 @@ try {
 
 		# 失敗時の通知送信
 		Send-Notification -EventType "onWorkflowFailure" -Variables @{
-			totalDuration   = $totalDuration.ToString()
-			sessionDuration = $sessionDuration.ToString()
+			totalDuration   = $durations.Total.ToString()
+			sessionDuration = $durations.Session.ToString()
 			logPath         = $Global:LogPath
 			errorLogPath    = $Global:ErrorLogPath
 			computerName    = $env:COMPUTERNAME
@@ -1421,8 +1431,8 @@ try {
 	}
 
 	Write-Host ""
-	Write-Host "今回セッション実行時間: $($sessionDuration.ToString())" -ForegroundColor White
-	Write-Host "総実行時間（初回開始から）: $($totalDuration.ToString())" -ForegroundColor Cyan
+	Write-Host "今回セッション実行時間: $($durations.Session.ToString())" -ForegroundColor White
+	Write-Host "総実行時間（初回開始から）: $($durations.Total.ToString())" -ForegroundColor Cyan
 	Write-Host "ログファイル: $Global:LogPath" -ForegroundColor White
 
 	if ($exitCode -ne 0) {
@@ -1443,21 +1453,15 @@ try {
 catch {
 	Write-Log "致命的なエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
 	# 致命的エラー時の通知送信
-	$errorTotalDuration = if ($Global:WorkflowInitialStartTime) {
-		(New-TimeSpan -Start $Global:WorkflowInitialStartTime -End (Get-Date)).ToString()
+	try {
+		$errorDurations = Get-WorkflowDurations
+		$errorTotalDuration = $errorDurations.Total.ToString()
+		$errorSessionDuration = $errorDurations.Session.ToString()
 	}
-	elseif ($Global:WorkflowStartTime) {
-		(New-TimeSpan -Start $Global:WorkflowStartTime -End (Get-Date)).ToString()
-	}
-	else {
-		"計測不可"
-	}
-
-	$errorSessionDuration = if ($Global:WorkflowStartTime) {
-		(New-TimeSpan -Start $Global:WorkflowStartTime -End (Get-Date)).ToString()
-	}
-	else {
-		"計測不可"
+	catch {
+		# 時間計算でエラーが発生した場合のフォールバック
+		$errorTotalDuration = "計測不可"
+		$errorSessionDuration = "計測不可"
 	}
 
 	Send-Notification -EventType "onWorkflowCriticalError" -Variables @{
