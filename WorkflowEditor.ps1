@@ -58,10 +58,9 @@ function Load-WorkflowConfig {
 # JSONファイルを保存する関数
 function Save-WorkflowConfig {
 	param([object]$Config, [string]$Path)
-
 	try {
 		# JSONを生成（4スペースインデント）
-		$json = $Config | ConvertTo-Json -Depth 10 -Compress:$false
+		$json = $Config | ConvertTo-Json -Depth 10
 
 		# 4スペースインデントを2スペースに変換
 		$lines = $json -split "`n"
@@ -102,6 +101,21 @@ function Save-WorkflowConfig {
 			[System.Windows.Forms.MessageBoxIcon]::Error
 		)
 		return $false
+	}
+}
+
+# Save-As機能の共通ヘルパー関数
+function Invoke-SaveAsDialog {
+	if ($script:Config) {
+		$saveDialog = New-Object System.Windows.Forms.SaveFileDialog
+		$saveDialog.Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
+		$saveDialog.InitialDirectory = Split-Path $script:ConfigFilePath -Parent
+		$saveDialog.FileName = Split-Path $script:ConfigFilePath -Leaf
+
+		if ($saveDialog.ShowDialog() -eq "OK") {
+			$script:ConfigFilePath = $saveDialog.FileName
+			Save-WorkflowConfig -Config $script:Config -Path $script:ConfigFilePath
+		}
 	}
 }
 
@@ -168,17 +182,7 @@ function Create-MainForm {
 	$saveAsMenuItem = New-Object System.Windows.Forms.ToolStripMenuItem
 	$saveAsMenuItem.Text = "名前を付けて保存(&A)"
 	$saveAsMenuItem.Add_Click({
-			if ($script:Config) {
-				$saveDialog = New-Object System.Windows.Forms.SaveFileDialog
-				$saveDialog.Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
-				$saveDialog.InitialDirectory = Split-Path $script:ConfigFilePath -Parent
-				$saveDialog.FileName = Split-Path $script:ConfigFilePath -Leaf
-
-				if ($saveDialog.ShowDialog() -eq "OK") {
-					$script:ConfigFilePath = $saveDialog.FileName
-					Save-WorkflowConfig -Config $script:Config -Path $script:ConfigFilePath
-				}
-			}
+			Invoke-SaveAsDialog
 		})
 	$null = $fileMenu.DropDownItems.Add($saveAsMenuItem)
 
@@ -362,17 +366,7 @@ function Create-BasicSettingsTab {
 	$btnSaveAsBasic.Location = New-Object System.Drawing.Point(270, $y)
 	$btnSaveAsBasic.Size = New-Object System.Drawing.Size(140, 30)
 	$btnSaveAsBasic.Add_Click({
-			if ($script:Config) {
-				$saveDialog = New-Object System.Windows.Forms.SaveFileDialog
-				$saveDialog.Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
-				$saveDialog.InitialDirectory = Split-Path $script:ConfigFilePath -Parent
-				$saveDialog.FileName = Split-Path $script:ConfigFilePath -Leaf
-
-				if ($saveDialog.ShowDialog() -eq "OK") {
-					$script:ConfigFilePath = $saveDialog.FileName
-					Save-WorkflowConfig -Config $script:Config -Path $script:ConfigFilePath
-				}
-			}
+			Invoke-SaveAsDialog
 		})
 	$panel.Controls.Add($btnSaveAsBasic)
 }
@@ -444,17 +438,7 @@ function Create-StepsTab {
 	$btnSaveAs.Location = New-Object System.Drawing.Point(270, 8)
 	$btnSaveAs.Size = New-Object System.Drawing.Size(120, 25)
 	$btnSaveAs.Add_Click({
-			if ($script:Config) {
-				$saveDialog = New-Object System.Windows.Forms.SaveFileDialog
-				$saveDialog.Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
-				$saveDialog.InitialDirectory = Split-Path $script:ConfigFilePath -Parent
-				$saveDialog.FileName = Split-Path $script:ConfigFilePath -Leaf
-
-				if ($saveDialog.ShowDialog() -eq "OK") {
-					$script:ConfigFilePath = $saveDialog.FileName
-					Save-WorkflowConfig -Config $script:Config -Path $script:ConfigFilePath
-				}
-			}
+			Invoke-SaveAsDialog
 		})
 	$buttonPanel.Controls.Add($btnSaveAs)# ListView：ステップ一覧を表示
 	$script:lstSteps = New-Object System.Windows.Forms.ListView
@@ -864,22 +848,6 @@ function Apply-StepSettings {
 	}
 }
 
-# テスト用のシンプルなフォーム作成関数
-function Create-TestForm {
-	$form = New-Object System.Windows.Forms.Form
-	$form.Text = "Test Workflow Editor"
-	$form.Size = New-Object System.Drawing.Size(800, 600)
-	$form.StartPosition = "CenterScreen"
-
-	$label = New-Object System.Windows.Forms.Label
-	$label.Text = "Workflow Configuration Editor - テスト版"
-	$label.Location = New-Object System.Drawing.Point(50, 50)
-	$label.Size = New-Object System.Drawing.Size(400, 50)
-	$null = $form.Controls.Add($label)
-
-	return $form
-}
-
 # メイン処理
 try {	# 設定ファイルのパスを確認
 	if (-not (Test-Path $ConfigPath)) {
@@ -911,15 +879,14 @@ try {	# 設定ファイルのパスを確認
 			Update-StepsView
 			Write-Host "初期データ読み込み完了" -ForegroundColor Green			# フォームを表示
 			Write-Host "Workflow Configuration Editorを起動しています..." -ForegroundColor Cyan
-			[System.Windows.Forms.Application]::EnableVisualStyles()
-
-			# フォームをアクティブ化
+			[System.Windows.Forms.Application]::EnableVisualStyles()			# フォームをアクティブ化
 			$form.BringToFront()   # 前面に移動
-			$form.Activate()       # アクティブ化Write-Host "ShowDialog()を呼び出します..." -ForegroundColor Yellow
-			$result = $form.ShowDialog()
+			$form.Activate()       # アクティブ化
+			Write-Host "ShowDialog()を呼び出します..." -ForegroundColor Yellow
+			$null = $form.ShowDialog()
 			Write-Host "アプリケーションが終了しました。" -ForegroundColor Green
 		} else {
-			Write-Host "エラー: フォームの作成に失敗しました。フォーム型: $($form.GetType())" -ForegroundColor Red
+			Write-host "エラー: フォームの作成に失敗しました。フォーム型: $($form.GetType())" -ForegroundColor Red
 		}
 	} else {
 		Write-Host "エラー: 設定ファイルの読み込みに失敗しました。" -ForegroundColor Red
