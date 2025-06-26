@@ -38,6 +38,7 @@
 ### 🔧 システム設定・カスタマイズ
 | ドキュメント | 対象者 | 内容 |
 |-------------|--------|------|
+| [WorkflowEditorガイド](WorkflowEditor-Guide.md) | 中級者 | GUIワークフロー設定エディター |
 | [レジストリ設定ガイド](Registry-Configuration.md) | 上級者 | レジストリ設定の詳細説明 |
 | [アプリケーション管理ガイド](Application-Management.md) | 全ユーザー | アプリインストール管理 |
 | [BitLocker設定ガイド](BitLocker-Configuration-Guide.md) | 中級者 | BitLocker暗号化設定 |
@@ -75,7 +76,7 @@
 1. [メインREADME](../README.md) → 2. [アプリケーション管理ガイド](Application-Management.md) → 3. [トラブルシューティングガイド](Troubleshooting.md)
 
 ### 🎓 中級者（基本的なカスタマイズを行いたい）
-1. [カスタマイズガイド](Customization-Guide.md) → 2. [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) → 3. [Slackスレッドガイド](Slack-Thread-Guide.md)
+1. [カスタマイズガイド](Customization-Guide.md) → 2. [WorkflowEditorガイド](WorkflowEditor-Guide.md) → 3. [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) → 4. [Slackスレッドガイド](Slack-Thread-Guide.md)
 
 ### 🎯 上級者（システム最適化を行いたい）
 1. [レジストリ設定ガイド](Registry-Configuration.md) → 2. [Windows Updateガイド](Windows-Update-Guide.md) → 3. [自動ログインREADME](AutoLogin-README.md)

@@ -22,6 +22,7 @@ windows-kitting-workflow/
 ├── main.bat                     # メインエントリーポイント
 ├── unblock-files.bat            # セキュリティブロック一括解除
 ├── MainWorkflow.ps1             # メインワークフローエンジン
+├── WorkflowEditor.ps1           # ワークフロー設定GUIエディター
 ├── AutoLogin.ps1                # 自動ログイン設定管理
 ├── TaskScheduler.ps1            # タスクスケジューラ管理
 ├── config/                      # 設定ファイル
@@ -121,6 +122,25 @@ windows-kitting-workflow/
 詳細は[レジストリ設定ガイド](docs/Registry-Configuration.md)を参照してください。
 
 ## カスタマイズ
+
+### WorkflowEditor GUI
+`WorkflowEditor.ps1`を使用して、視覚的にワークフロー設定を編集できます。
+
+```powershell
+# WorkflowEditorを起動
+.\WorkflowEditor.ps1
+
+# カスタム設定ファイルを指定
+.\WorkflowEditor.ps1 -ConfigPath "path\to\workflow.json"
+```
+
+WorkflowEditorでは以下の操作が可能です：
+- ワークフローの基本設定（名前、バージョン、説明など）
+- ステップの詳細設定（スクリプト、タイプ、実行オプション）
+- ステップの実行順序変更（上下移動）
+- 設定の保存・名前を付けて保存
+
+詳細は[WorkflowEditorガイド](docs/WorkflowEditor-Guide.md)を参照してください。
 
 ### アプリケーションの追加・変更
 `config/applications.json`を編集してインストールアプリをカスタマイズできます。
