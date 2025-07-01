@@ -133,6 +133,10 @@ windows-kitting-workflow/
 # カスタム設定ファイルを指定
 .\WorkflowEditor.ps1 -ConfigPath "path\to\workflow.json"
 ```
+![image](https://github.com/user-attachments/assets/23f9a98f-3f0f-406c-ad1a-10475c7911c4)
+
+![image](https://github.com/user-attachments/assets/22f9c61c-55cc-4583-a1e4-a2883dc6cab0)
+
 
 WorkflowEditorでは以下の操作が可能です：
 - ワークフローの基本設定（名前、バージョン、説明など）
