@@ -46,6 +46,10 @@ Workflow Editorは、`workflow.json`設定ファイルを視覚的に編集で�
 .\WorkflowEditor.ps1 -ConfigPath "path\to\custom\workflow.json"
 ```
 
+![image](https://github.com/user-attachments/assets/23f9a98f-3f0f-406c-ad1a-10475c7911c4)
+
+![image](https://github.com/user-attachments/assets/22f9c61c-55cc-4583-a1e4-a2883dc6cab0)
+
 ### 基本操作
 
 1. **ファイル操作**
