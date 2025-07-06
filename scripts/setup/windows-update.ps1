@@ -225,26 +225,54 @@ function Install-WindowsUpdates {
 	}
 }
 
-# Windows Update履歴の取得
+# Windows Update履歴の取得（安全な実装）
 function Get-UpdateHistory {
 	try {
 		Write-Log "最近のWindows Update履歴を確認中..."
 
-		$history = Get-WUHistory -MaxDate (Get-Date).AddDays(-30) | Select-Object -First 10
+		# Get-WUHistoryの代わりにイベントログから履歴を取得
+		try {
+			$events = Get-WinEvent -FilterHashtable @{LogName='System'; Id=19; StartTime=(Get-Date).AddDays(-30)} -MaxEvents 10 -ErrorAction SilentlyContinue
 
-		if ($history) {
-			Write-Log "最近のアップデート履歴 (30日以内):"
-			foreach ($item in $history) {
-				Write-Log "  - $($item.Date): $($item.Title) ($($item.Result))"
+			if ($events) {
+				Write-Log "最近のアップデート履歴 (30日以内、イベントログから):"
+				foreach ($event in $events) {
+					Write-Log "  - $($event.TimeCreated): $($event.Message -replace '\r?\n', ' ' | Out-String -Width 100)"
+				}
+			}
+			else {
+				Write-Log "最近のアップデート履歴がありません（イベントログから）"
 			}
 		}
-		else {
-			Write-Log "最近のアップデート履歴がありません"
+		catch {
+			Write-Log "イベントログからの履歴取得でエラー: $($_.Exception.Message)" -Level "WARN"
+
+			# フォールバック: WMIから取得を試行
+			try {
+				Write-Log "WMIからWindows Update履歴を取得中..."
+				$wmiQuery = "SELECT * FROM Win32_QuickFixEngineering WHERE InstalledOn > '$((Get-Date).AddDays(-30).ToString('yyyy-MM-dd'))'"
+				$updates = Get-WmiObject -Query $wmiQuery -ErrorAction SilentlyContinue
+
+				if ($updates) {
+					Write-Log "最近のアップデート履歴 (30日以内、WMIから):"
+					foreach ($update in $updates) {
+						Write-Log "  - $($update.InstalledOn): $($update.HotFixID) - $($update.Description)"
+					}
+				}
+				else {
+					Write-Log "最近のアップデート履歴がありません（WMIから）"
+				}
+			}
+			catch {
+				Write-Log "WMIからの履歴取得でもエラー: $($_.Exception.Message)" -Level "WARN"
+				Write-Log "Windows Update履歴の確認をスキップします"
+			}
 		}
 
 	}
  catch {
 		Write-Log "アップデート履歴の確認でエラー: $($_.Exception.Message)" -Level "WARN"
+		Write-Log "Windows Update履歴の確認をスキップして続行します"
 	}
 }
 
