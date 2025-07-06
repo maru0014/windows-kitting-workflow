@@ -14,6 +14,14 @@ Windows Kitting Workflowは、Windows 11 PCを完全自動でセットアップ�
 - **自動継続**: 再起動後も自動的にセットアップを継続
 - **安全なバックアップ**: レジストリ変更前の自動バックアップ
 
+## デモ動画
+
+実際の動作を確認するには、以下のデモ動画をご覧ください：
+
+[![Windows Kitting Workflow デモ動画](https://img.youtube.com/vi/JRqgSvs1WTQ/maxresdefault.jpg)](https://youtu.be/JRqgSvs1WTQ)
+
+[🎬 YouTube でデモ動画を見る](https://youtu.be/JRqgSvs1WTQ)
+
 ## ファイル構成
 
 ```
