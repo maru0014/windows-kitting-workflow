@@ -18,7 +18,7 @@ Windows Kitting Workflowは、Windows 11 PCを完全自動でセットアップ�
 
 実際の動作を確認するには、以下のデモ動画をご覧ください：
 
-[![Windows Kitting Workflow デモ動画](https://img.youtube.com/vi/JRqgSvs1WTQ/maxresdefault.jpg)](https://youtu.be/JRqgSvs1WTQ)
+[![Windows Kitting Workflow デモ動画](https://github.com/user-attachments/assets/2ae9e24f-da1b-41f3-8d5a-22f2a968e6b4)](https://youtu.be/JRqgSvs1WTQ?si=_2jrspqjiH4APwLO)
 
 [🎬 YouTube でデモ動画を見る](https://youtu.be/JRqgSvs1WTQ)
 
