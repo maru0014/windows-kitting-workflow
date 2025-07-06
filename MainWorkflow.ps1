@@ -1387,8 +1387,19 @@ try {
 	Write-Host "Windows Kitting Workflow 実行結果" -ForegroundColor Cyan
 	Write-Host "========================================" -ForegroundColor Cyan
 
+	# 結果の概要表示
+	if ($exitCode -eq 0) {
+		Write-Host "結果: 正常終了" -ForegroundColor Green
+		Write-Host "すべてのワークフローが正常に完了しました。" -ForegroundColor Green
+	}
+	else {
+		Write-Host "結果: 異常終了" -ForegroundColor Red
+		Write-Host "一部のワークフローでエラーが発生しました。" -ForegroundColor Red
+	}
 
-	Read-Host "ワークフローの実行結果は $exitCode です。"
+	Write-Host ""
+	Write-Host "詳細情報を表示するには何かキーを押してください..." -ForegroundColor Yellow
+	$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
 	if ($exitCode -eq 0) {
 		Write-Host "✓ ワークフローが正常に完了しました" -ForegroundColor Green
