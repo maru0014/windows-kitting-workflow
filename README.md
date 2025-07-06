@@ -126,6 +126,15 @@ windows-kitting-workflow/
 ### WorkflowEditor GUI
 `WorkflowEditor.ps1`を使用して、視覚的にワークフロー設定を編集できます。
 
+```batch
+# WorkflowEditorを起動（推奨）
+workflow-editor.bat
+
+# カスタム設定ファイルを指定
+workflow-editor.bat "path\to\workflow.json"
+```
+
+または、直接PowerShellを使用：
 ```powershell
 # WorkflowEditorを起動
 .\WorkflowEditor.ps1
