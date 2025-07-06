@@ -266,7 +266,15 @@ function Install-WingetPackage {
 			return $true
 		}
 		else {
-			Write-Log "❌ パッケージのインストールに失敗しました: $($App.name) (Exit Code: $LASTEXITCODE)" -Level "ERROR"
+			$errorMessage = switch ($LASTEXITCODE) {
+				1 { "一般的なエラー" }
+				2 { "パッケージが見つかりません" }
+				3 { "パッケージのダウンロードに失敗しました" }
+				5 { "アクセス拒否" }
+				-1978335189 { "既にインストールされています" }
+				default { "エラーコード: $LASTEXITCODE" }
+			}
+			Write-Log "❌ パッケージのインストールに失敗しました: $($App.name) ($errorMessage)" -Level "ERROR"
 			return $false
 		}
 	}
@@ -326,7 +334,19 @@ function Install-MsiPackage {
 			return $true
 		}
 		else {
-			Write-Log "❌ MSIパッケージのインストールに失敗しました: $($App.name) (Exit Code: $($process.ExitCode))" -Level "ERROR"
+			$errorMessage = switch ($process.ExitCode) {
+				1 { "一般的なエラー" }
+				2 { "ファイルが見つかりません" }
+				3 { "パスが見つかりません" }
+				1602 { "ユーザーによってインストールがキャンセルされました" }
+				1603 { "インストール中に致命的なエラーが発生しました" }
+				1618 { "他のインストールが進行中です" }
+				1619 { "インストールパッケージを開くことができませんでした" }
+				1622 { "ログファイルを開くことができませんでした" }
+				1633 { "このプラットフォームはサポートされていません" }
+				default { "エラーコード: $($process.ExitCode)" }
+			}
+			Write-Log "❌ MSIパッケージのインストールに失敗しました: $($App.name) ($errorMessage)" -Level "ERROR"
 			return $false
 		}
 	}
@@ -385,7 +405,16 @@ function Install-ExePackage {
 			return $true
 		}
 		else {
-			Write-Log "❌ EXEパッケージのインストールに失敗しました: $($App.name) (Exit Code: $($process.ExitCode))" -Level "ERROR"
+			$errorMessage = switch ($process.ExitCode) {
+				1 { "一般的なエラー" }
+				2 { "ファイルが見つかりません" }
+				3 { "パスが見つかりません" }
+				5 { "アクセス拒否" }
+				87 { "パラメータエラー" }
+				1223 { "ユーザーによってキャンセルされました" }
+				default { "エラーコード: $($process.ExitCode)" }
+			}
+			Write-Log "❌ EXEパッケージのインストールに失敗しました: $($App.name) ($errorMessage)" -Level "ERROR"
 			return $false
 		}
 	}

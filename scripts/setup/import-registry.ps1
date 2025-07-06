@@ -55,7 +55,15 @@ function Backup-Registry {
 			}
 		}
 		else {
-			Write-Log "❌ レジストリバックアップコマンドが失敗しました (Exit Code: $LASTEXITCODE)" -Level "ERROR"
+			$errorMessage = switch ($LASTEXITCODE) {
+				1 { "一般的なエラー" }
+				2 { "ファイルが見つかりません" }
+				3 { "パスが見つかりません" }
+				5 { "アクセス拒否" }
+				87 { "パラメータエラー" }
+				default { "エラーコード: $LASTEXITCODE" }
+			}
+			Write-Log "❌ レジストリバックアップコマンドが失敗しました ($errorMessage)" -Level "ERROR"
 			return $false
 		}
 
