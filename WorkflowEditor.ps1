@@ -660,6 +660,22 @@ function Create-StepDetailsPanel {
 
 	$y += 50
 
+	# 依存関係設定グループボックス
+	$grpDependencies = New-Object System.Windows.Forms.GroupBox
+	$grpDependencies.Text = "依存関係設定 (依存するステップを選択)"
+	$grpDependencies.Location = New-Object System.Drawing.Point(20, $y)
+	$grpDependencies.Size = New-Object System.Drawing.Size(600, 150)
+	$panel.Controls.Add($grpDependencies)
+
+	# 依存関係選択用CheckListBox
+	$script:chkDependsOn = New-Object System.Windows.Forms.CheckedListBox
+	$script:chkDependsOn.Location = New-Object System.Drawing.Point(10, 25)
+	$script:chkDependsOn.Size = New-Object System.Drawing.Size(580, 110)
+	$script:chkDependsOn.CheckOnClick = $true
+	$grpDependencies.Controls.Add($script:chkDependsOn)
+
+	$y += 170
+
 	# ステップ設定を適用ボタン
 	$btnApplyStep = New-Object System.Windows.Forms.Button
 	$btnApplyStep.Text = "ステップ設定を適用"
@@ -809,6 +825,19 @@ function Show-StepDetails {
 			$script:numTimeout.Value = [int]$step.timeout
 			$script:numRetryCount.Value = [int]$step.retryCount
 			$script:cmbOnError.SelectedItem = $step.onError
+
+			# 依存関係の設定
+			Update-DependenciesListBox -CurrentStepId $StepId
+
+			# 現在のdependsOn設定をチェック
+			if ($step.dependsOn -and $step.dependsOn.Count -gt 0) {
+				for ($i = 0; $i -lt $script:chkDependsOn.Items.Count; $i++) {
+					$itemId = $script:chkDependsOn.Items[$i]
+					if ($step.dependsOn -contains $itemId) {
+						$script:chkDependsOn.SetItemChecked($i, $true)
+					}
+				}
+			}
 		}
 	}
 }
@@ -856,6 +885,15 @@ function Apply-StepSettings {
 			$step.retryCount = [int]$script:numRetryCount.Value
 			$step.onError = $script:cmbOnError.SelectedItem
 
+			# 依存関係の設定を保存
+			$selectedDependencies = @()
+			for ($i = 0; $i -lt $script:chkDependsOn.Items.Count; $i++) {
+				if ($script:chkDependsOn.GetItemChecked($i)) {
+					$selectedDependencies += $script:chkDependsOn.Items[$i]
+				}
+			}
+			$step.dependsOn = $selectedDependencies
+
 			# ステップ一覧を更新
 			Update-StepsView
 
@@ -867,6 +905,35 @@ function Apply-StepSettings {
 			)
 		}
 	}
+}
+
+# 依存関係リストボックスを更新する関数
+function Update-DependenciesListBox {
+	param([string]$CurrentStepId)
+
+	# リストをクリア
+	$script:chkDependsOn.Items.Clear()
+
+	if ($script:Config -and $script:Config.workflow -and $script:Config.workflow.steps) {
+		# 現在のステップ以外のIDを取得
+		$availableSteps = $script:Config.workflow.steps | Where-Object { $_.id -ne $CurrentStepId }
+
+		foreach ($step in $availableSteps) {
+			$displayText = "$($step.id) - $($step.name)"
+			$script:chkDependsOn.Items.Add($step.id) | Out-Null
+		}
+	}
+}
+
+# 利用可能なステップIDリストを取得する関数
+function Get-AvailableStepIds {
+	param([string]$ExcludeStepId)
+
+	$availableIds = @()
+	if ($script:Config -and $script:Config.workflow -and $script:Config.workflow.steps) {
+		$availableIds = $script:Config.workflow.steps | Where-Object { $_.id -ne $ExcludeStepId } | ForEach-Object { $_.id }
+	}
+	return $availableIds
 }
 
 # 新規ステップを追加する関数
@@ -900,6 +967,7 @@ function Add-NewStep {
 		timeout = 300
 		retryCount = 3
 		onError = "stop"
+		dependsOn = @()
 	}
 
 	# ステップ配列が存在しない場合は作成
@@ -1142,6 +1210,9 @@ function Clear-StepDetails {
 	$script:numTimeout.Value = 300
 	$script:numRetryCount.Value = 3
 	$script:cmbOnError.SelectedIndex = -1
+
+	# 依存関係リストもクリア
+	$script:chkDependsOn.Items.Clear()
 }
 
 # メイン処理
