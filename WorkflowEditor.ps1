@@ -401,10 +401,30 @@ function Create-StepsTab {
 	$buttonPanel.Dock = "Top"
 	$grpSteps.Controls.Add($buttonPanel)
 
+	# 新規追加ボタン
+	$btnAddStep = New-Object System.Windows.Forms.Button
+	$btnAddStep.Text = "新規追加"
+	$btnAddStep.Location = New-Object System.Drawing.Point(10, 8)
+	$btnAddStep.Size = New-Object System.Drawing.Size(80, 25)
+	$btnAddStep.Add_Click({
+		Add-NewStep
+	})
+	$buttonPanel.Controls.Add($btnAddStep)
+
+	# 削除ボタン
+	$btnDeleteStep = New-Object System.Windows.Forms.Button
+	$btnDeleteStep.Text = "削除"
+	$btnDeleteStep.Location = New-Object System.Drawing.Point(100, 8)
+	$btnDeleteStep.Size = New-Object System.Drawing.Size(60, 25)
+	$btnDeleteStep.Add_Click({
+		Remove-Step
+	})
+	$buttonPanel.Controls.Add($btnDeleteStep)
+
 	# 上へ移動ボタン
 	$btnMoveUp = New-Object System.Windows.Forms.Button
 	$btnMoveUp.Text = "上へ移動"
-	$btnMoveUp.Location = New-Object System.Drawing.Point(10, 8)
+	$btnMoveUp.Location = New-Object System.Drawing.Point(170, 8)
 	$btnMoveUp.Size = New-Object System.Drawing.Size(80, 25)
 	$btnMoveUp.Add_Click({
 			Move-StepUp
@@ -414,7 +434,7 @@ function Create-StepsTab {
 	# 下へ移動ボタン
 	$btnMoveDown = New-Object System.Windows.Forms.Button
 	$btnMoveDown.Text = "下へ移動"
-	$btnMoveDown.Location = New-Object System.Drawing.Point(100, 8)
+	$btnMoveDown.Location = New-Object System.Drawing.Point(260, 8)
 	$btnMoveDown.Size = New-Object System.Drawing.Size(80, 25)
 	$btnMoveDown.Add_Click({
 			Move-StepDown
@@ -424,7 +444,7 @@ function Create-StepsTab {
 	# 保存ボタン
 	$btnSave = New-Object System.Windows.Forms.Button
 	$btnSave.Text = "保存"
-	$btnSave.Location = New-Object System.Drawing.Point(200, 8)
+	$btnSave.Location = New-Object System.Drawing.Point(360, 8)
 	$btnSave.Size = New-Object System.Drawing.Size(60, 25)
 	$btnSave.Add_Click({
 			if ($script:Config) {
@@ -432,10 +452,11 @@ function Create-StepsTab {
 			}
 		})
 	$buttonPanel.Controls.Add($btnSave)
+
 	# 名前を付けて保存ボタン
 	$btnSaveAs = New-Object System.Windows.Forms.Button
 	$btnSaveAs.Text = "名前を付けて保存"
-	$btnSaveAs.Location = New-Object System.Drawing.Point(270, 8)
+	$btnSaveAs.Location = New-Object System.Drawing.Point(430, 8)
 	$btnSaveAs.Size = New-Object System.Drawing.Size(120, 25)
 	$btnSaveAs.Add_Click({
 			Invoke-SaveAsDialog
@@ -639,6 +660,22 @@ function Create-StepDetailsPanel {
 
 	$y += 50
 
+	# 依存関係設定グループボックス
+	$grpDependencies = New-Object System.Windows.Forms.GroupBox
+	$grpDependencies.Text = "依存関係設定 (依存するステップを選択)"
+	$grpDependencies.Location = New-Object System.Drawing.Point(20, $y)
+	$grpDependencies.Size = New-Object System.Drawing.Size(600, 150)
+	$panel.Controls.Add($grpDependencies)
+
+	# 依存関係選択用CheckListBox
+	$script:chkDependsOn = New-Object System.Windows.Forms.CheckedListBox
+	$script:chkDependsOn.Location = New-Object System.Drawing.Point(10, 25)
+	$script:chkDependsOn.Size = New-Object System.Drawing.Size(580, 110)
+	$script:chkDependsOn.CheckOnClick = $true
+	$grpDependencies.Controls.Add($script:chkDependsOn)
+
+	$y += 170
+
 	# ステップ設定を適用ボタン
 	$btnApplyStep = New-Object System.Windows.Forms.Button
 	$btnApplyStep.Text = "ステップ設定を適用"
@@ -788,6 +825,19 @@ function Show-StepDetails {
 			$script:numTimeout.Value = [int]$step.timeout
 			$script:numRetryCount.Value = [int]$step.retryCount
 			$script:cmbOnError.SelectedItem = $step.onError
+
+			# 依存関係の設定
+			Update-DependenciesListBox -CurrentStepId $StepId
+
+			# 現在のdependsOn設定をチェック
+			if ($step.dependsOn -and $step.dependsOn.Count -gt 0) {
+				for ($i = 0; $i -lt $script:chkDependsOn.Items.Count; $i++) {
+					$itemId = $script:chkDependsOn.Items[$i]
+					if ($step.dependsOn -contains $itemId) {
+						$script:chkDependsOn.SetItemChecked($i, $true)
+					}
+				}
+			}
 		}
 	}
 }
@@ -835,6 +885,15 @@ function Apply-StepSettings {
 			$step.retryCount = [int]$script:numRetryCount.Value
 			$step.onError = $script:cmbOnError.SelectedItem
 
+			# 依存関係の設定を保存
+			$selectedDependencies = @()
+			for ($i = 0; $i -lt $script:chkDependsOn.Items.Count; $i++) {
+				if ($script:chkDependsOn.GetItemChecked($i)) {
+					$selectedDependencies += $script:chkDependsOn.Items[$i]
+				}
+			}
+			$step.dependsOn = $selectedDependencies
+
 			# ステップ一覧を更新
 			Update-StepsView
 
@@ -846,6 +905,314 @@ function Apply-StepSettings {
 			)
 		}
 	}
+}
+
+# 依存関係リストボックスを更新する関数
+function Update-DependenciesListBox {
+	param([string]$CurrentStepId)
+
+	# リストをクリア
+	$script:chkDependsOn.Items.Clear()
+
+	if ($script:Config -and $script:Config.workflow -and $script:Config.workflow.steps) {
+		# 現在のステップ以外のIDを取得
+		$availableSteps = $script:Config.workflow.steps | Where-Object { $_.id -ne $CurrentStepId }
+
+		foreach ($step in $availableSteps) {
+			$displayText = "$($step.id) - $($step.name)"
+			$script:chkDependsOn.Items.Add($step.id) | Out-Null
+		}
+	}
+}
+
+# 利用可能なステップIDリストを取得する関数
+function Get-AvailableStepIds {
+	param([string]$ExcludeStepId)
+
+	$availableIds = @()
+	if ($script:Config -and $script:Config.workflow -and $script:Config.workflow.steps) {
+		$availableIds = $script:Config.workflow.steps | Where-Object { $_.id -ne $ExcludeStepId } | ForEach-Object { $_.id }
+	}
+	return $availableIds
+}
+
+# 新規ステップを追加する関数
+function Add-NewStep {
+	if (-not $script:Config -or -not $script:Config.workflow) {
+		[System.Windows.Forms.MessageBox]::Show(
+			"設定ファイルが読み込まれていません。",
+			"エラー",
+			[System.Windows.Forms.MessageBoxButtons]::OK,
+			[System.Windows.Forms.MessageBoxIcon]::Error
+		)
+		return
+	}
+
+	# ステップID入力ダイアログを表示
+	$newStepId = Show-StepIdInputDialog
+	if (-not $newStepId) {
+		# キャンセルされた場合は何もしない
+		return
+	}
+
+	# デフォルトのステップオブジェクトを作成
+	$newStep = [PSCustomObject]@{
+		id = $newStepId
+		name = "新しいステップ ($newStepId)"
+		description = "説明を入力してください"
+		script = "scripts/setup/example.ps1"
+		type = "powershell"
+		runAsAdmin = $false
+		rebootRequired = $false
+		timeout = 300
+		retryCount = 3
+		onError = "stop"
+		dependsOn = @()
+	}
+
+	# ステップ配列が存在しない場合は作成
+	if (-not $script:Config.workflow.steps) {
+		$script:Config.workflow.steps = @()
+	}
+
+	# 新しいステップを配列に追加
+	$script:Config.workflow.steps += $newStep
+
+	# ビューを更新
+	Update-StepsView
+
+	# 新しく追加されたステップを選択
+	$newStepIndex = $script:Config.workflow.steps.Count - 1
+	if ($script:lstSteps.Items.Count -gt $newStepIndex) {
+		$script:lstSteps.Items[$newStepIndex].Selected = $true
+		$script:lstSteps.Items[$newStepIndex].Focused = $true
+		$script:lstSteps.Focus()
+		$script:lstSteps.EnsureVisible($newStepIndex)
+
+		# 詳細パネルに新しいステップの情報を表示
+		Show-StepDetails -StepId $newStepId
+	}
+
+	[System.Windows.Forms.MessageBox]::Show(
+		"新しいステップ '$($newStep.name)' を追加しました。",
+		"ステップ追加完了",
+		[System.Windows.Forms.MessageBoxButtons]::OK,
+		[System.Windows.Forms.MessageBoxIcon]::Information
+	)
+}
+
+# ステップID入力ダイアログを表示する関数
+function Show-StepIdInputDialog {
+	# ダイアログフォームを作成
+	$inputForm = New-Object System.Windows.Forms.Form
+	$inputForm.Text = "新規ステップID入力"
+	$inputForm.Size = New-Object System.Drawing.Size(450, 220)
+	$inputForm.StartPosition = "CenterParent"
+	$inputForm.FormBorderStyle = "FixedDialog"
+	$inputForm.MaximizeBox = $false
+	$inputForm.MinimizeBox = $false
+
+	# 説明ラベル
+	$lblDescription = New-Object System.Windows.Forms.Label
+	$lblDescription.Text = "ステップIDを入力してください（半角英数字とハイフンのみ）："
+	$lblDescription.Location = New-Object System.Drawing.Point(20, 20)
+	$lblDescription.Size = New-Object System.Drawing.Size(400, 20)
+	$inputForm.Controls.Add($lblDescription)
+
+	# ステップID入力テキストボックス
+	$txtStepId = New-Object System.Windows.Forms.TextBox
+	$txtStepId.Location = New-Object System.Drawing.Point(20, 50)
+	$txtStepId.Size = New-Object System.Drawing.Size(300, 23)
+	$inputForm.Controls.Add($txtStepId)
+
+	# デフォルト提案ボタン
+	$btnSuggest = New-Object System.Windows.Forms.Button
+	$btnSuggest.Text = "自動提案"
+	$btnSuggest.Location = New-Object System.Drawing.Point(330, 50)
+	$btnSuggest.Size = New-Object System.Drawing.Size(80, 23)
+	$btnSuggest.Add_Click({
+		$suggested = Get-SuggestedStepId
+		$txtStepId.Text = $suggested
+	})
+	$inputForm.Controls.Add($btnSuggest)
+
+	# エラーメッセージラベル
+	$lblError = New-Object System.Windows.Forms.Label
+	$lblError.Location = New-Object System.Drawing.Point(20, 80)
+	$lblError.Size = New-Object System.Drawing.Size(400, 40)
+	$lblError.ForeColor = [System.Drawing.Color]::Red
+	$lblError.Text = ""
+	$inputForm.Controls.Add($lblError)
+
+	# OKボタン
+	$btnOK = New-Object System.Windows.Forms.Button
+	$btnOK.Text = "OK"
+	$btnOK.Location = New-Object System.Drawing.Point(180, 140)
+	$btnOK.Size = New-Object System.Drawing.Size(75, 25)
+	$btnOK.DialogResult = "OK"
+	$inputForm.Controls.Add($btnOK)
+
+	# キャンセルボタン
+	$btnCancel = New-Object System.Windows.Forms.Button
+	$btnCancel.Text = "キャンセル"
+	$btnCancel.Location = New-Object System.Drawing.Point(265, 140)
+	$btnCancel.Size = New-Object System.Drawing.Size(75, 25)
+	$btnCancel.DialogResult = "Cancel"
+	$inputForm.Controls.Add($btnCancel)
+
+	# デフォルトボタンとキャンセルボタンを設定
+	$inputForm.AcceptButton = $btnOK
+	$inputForm.CancelButton = $btnCancel
+
+	# バリデーション関数
+	$validateInput = {
+		$stepId = $txtStepId.Text.Trim()
+		$errorMessage = ""
+
+		if ([string]::IsNullOrWhiteSpace($stepId)) {
+			$errorMessage = "ステップIDを入力してください。"
+		}
+		elseif (-not (Test-StepIdFormat -StepId $stepId)) {
+			$errorMessage = "ステップIDは半角英数字とハイフンのみ使用できます。"
+		}
+		elseif (Test-StepIdExists -StepId $stepId) {
+			$errorMessage = "このステップIDは既に存在します。別のIDを入力してください。"
+		}
+
+		$lblError.Text = $errorMessage
+		$btnOK.Enabled = [string]::IsNullOrEmpty($errorMessage)
+	}
+
+	# テキストボックスの変更時にバリデーションを実行
+	$txtStepId.Add_TextChanged($validateInput)
+
+	# 初期値を設定
+	$txtStepId.Text = Get-SuggestedStepId
+	& $validateInput
+
+	# ダイアログを表示
+	$result = $inputForm.ShowDialog()
+
+	if ($result -eq "OK") {
+		return $txtStepId.Text.Trim()
+	}
+	else {
+		return $null
+	}
+}
+
+# ステップIDの形式をチェックする関数
+function Test-StepIdFormat {
+	param([string]$StepId)
+
+	# 半角英数字とハイフンのみを許可する正規表現
+	return $StepId -match '^[a-zA-Z0-9\-]+$'
+}
+
+# ステップIDの重複をチェックする関数
+function Test-StepIdExists {
+	param([string]$StepId)
+
+	if (-not $script:Config -or -not $script:Config.workflow -or -not $script:Config.workflow.steps) {
+		return $false
+	}
+
+	return $script:Config.workflow.steps | Where-Object { $_.id -eq $StepId } | Select-Object -First 1
+}
+
+# デフォルトのステップIDを提案する関数
+function Get-SuggestedStepId {
+	$newStepNumber = 1
+	if ($script:Config -and $script:Config.workflow -and $script:Config.workflow.steps) {
+		$existingNumbers = $script:Config.workflow.steps | ForEach-Object {
+			if ($_.id -match '^step(\d+)$') {
+				[int]$matches[1]
+			} else {
+				0
+			}
+		}
+		if ($existingNumbers) {
+			$newStepNumber = ($existingNumbers | Measure-Object -Maximum).Maximum + 1
+		}
+	}
+
+	return "step$newStepNumber"
+}
+
+# ステップを削除する関数
+function Remove-Step {
+	if ($script:lstSteps.SelectedItems.Count -eq 0) {
+		[System.Windows.Forms.MessageBox]::Show(
+			"削除するステップを選択してください。",
+			"情報",
+			[System.Windows.Forms.MessageBoxButtons]::OK,
+			[System.Windows.Forms.MessageBoxIcon]::Information
+		)
+		return
+	}
+
+	$selectedStepId = $script:lstSteps.SelectedItems[0].SubItems[1].Text  # ID列を取得
+	$selectedStepName = $script:lstSteps.SelectedItems[0].SubItems[2].Text  # 名前列を取得
+
+	# 削除確認ダイアログ
+	$result = [System.Windows.Forms.MessageBox]::Show(
+		"ステップ '$selectedStepName' を削除しますか？`n`nこの操作は元に戻せません。",
+		"ステップ削除確認",
+		[System.Windows.Forms.MessageBoxButtons]::YesNo,
+		[System.Windows.Forms.MessageBoxIcon]::Question
+	)
+
+	if ($result -eq "Yes") {
+		# ステップを配列から削除
+		$stepIndex = -1
+		for ($i = 0; $i -lt $script:Config.workflow.steps.Count; $i++) {
+			if ($script:Config.workflow.steps[$i].id -eq $selectedStepId) {
+				$stepIndex = $i
+				break
+			}
+		}
+
+		if ($stepIndex -ge 0) {
+			# ステップを削除（配列から除去）
+			$newSteps = @()
+			for ($i = 0; $i -lt $script:Config.workflow.steps.Count; $i++) {
+				if ($i -ne $stepIndex) {
+					$newSteps += $script:Config.workflow.steps[$i]
+				}
+			}
+			$script:Config.workflow.steps = $newSteps
+
+			# ビューを更新
+			Update-StepsView
+
+			# 詳細パネルをクリア
+			Clear-StepDetails
+
+			[System.Windows.Forms.MessageBox]::Show(
+				"ステップ '$selectedStepName' を削除しました。",
+				"削除完了",
+				[System.Windows.Forms.MessageBoxButtons]::OK,
+				[System.Windows.Forms.MessageBoxIcon]::Information
+			)
+		}
+	}
+}
+
+# ステップ詳細をクリアする関数
+function Clear-StepDetails {
+	$script:txtStepId.Text = ""
+	$script:txtStepName.Text = ""
+	$script:txtStepDescription.Text = ""
+	$script:txtScript.Text = ""
+	$script:cmbStepType.SelectedIndex = -1
+	$script:chkRunAsAdmin.Checked = $false
+	$script:chkRebootRequired.Checked = $false
+	$script:numTimeout.Value = 300
+	$script:numRetryCount.Value = 3
+	$script:cmbOnError.SelectedIndex = -1
+
+	# 依存関係リストもクリア
+	$script:chkDependsOn.Items.Clear()
 }
 
 # メイン処理
