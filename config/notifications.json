@@ -18,8 +18,8 @@
       "teams": {
         "enabled": false,
         "flowUrl": "https://your-teams-flow-url-here",
-        "teamId": "2c4e90ab-a1e0-4dee-8f9a-f1b9b2a1667e",
-        "channelId": "19:wOI3_1EgOFnIDVDab8taDWhD_vCLvrLGrZp0zXluvLs1@thread.tacv2",
+        "teamId": "YOUR-TEAM-ID-HERE",
+        "channelId": "YOUR-CHANNEL-ID-HERE",
         "idStoragePath": "status/teams_machine_ids.json"
       },
       "email": {
