@@ -236,7 +236,54 @@ function Send-SlackNotification {
 	}
 }
 
-# Teams通知送信（アダプティブカード使用）
+# マシンID管理関数
+function Get-OrCreate-MachineId {
+	param(
+		[string]$StoragePath = "status/teams_machine_ids.json"
+	)
+
+	try {
+		$serialNumber = Get-PCSerialNumber
+		$idFile = Join-Path (Split-Path $PSScriptRoot -Parent) $StoragePath
+
+		# 既存IDの確認
+		if (Test-Path $idFile) {
+			$machineIds = Get-Content $idFile -Raw | ConvertFrom-Json
+			if ($machineIds.$serialNumber) {
+				Write-Verbose "既存のマシンID取得: $($machineIds.$serialNumber)"
+				return $machineIds.$serialNumber
+			}
+		}
+
+		# 新規ID生成
+		$newId = [System.Guid]::NewGuid().ToString("N").Substring(0, 12)
+		Write-Verbose "新しいマシンID生成: $newId"
+
+		# ID保存
+		$machineIds = @{}
+		if (Test-Path $idFile) {
+			$machineIds = Get-Content $idFile -Raw | ConvertFrom-Json
+		}
+		$machineIds | Add-Member -NotePropertyName $serialNumber -NotePropertyValue $newId -Force
+
+		# statusディレクトリが存在しない場合は作成
+		$parentDir = Split-Path $idFile -Parent
+		if (-not (Test-Path $parentDir)) {
+			New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
+		}
+
+		$machineIds | ConvertTo-Json | Out-File -FilePath $idFile -Encoding UTF8
+
+		return $newId
+	}
+	catch {
+		Write-Warning "マシンID管理でエラー: $($_.Exception.Message)"
+		# エラー時はシリアル番号をそのまま使用
+		return $serialNumber
+	}
+}
+
+# Teams通知送信（新スレッド化方式）
 function Send-TeamsNotification {
 	param(
 		[Parameter(Mandatory = $true)]
@@ -255,153 +302,59 @@ function Send-TeamsNotification {
 			return $true
 		}
 
-		$threadConfig = $teamsConfig.thread
-
 		# Flow URLが設定されているかチェック
 		if (-not $teamsConfig.flowUrl -or $teamsConfig.flowUrl -eq "https://your-teams-flow-url-here") {
 			Write-Warning "Teams Flow URLが設定されていません"
 			return $false
 		}
 
-		# シリアル番号-PC名をプレフィックスとして追加
-		$serialNumber = Get-PCSerialNumber
-		$pcName = $env:COMPUTERNAME
-		$prefixedMessage = "**[$serialNumber-$pcName]**`r`n`r`n$Message"
-
-		# スレッド機能が無効な場合は従来通り
-		if (-not $threadConfig -or -not $threadConfig.enabled) {
-			# アダプティブカードコンテンツ作成
-			$cardContent = @{
-				'$schema' = 'http://adaptivecards.io/schemas/adaptive-card.json'
-				type      = 'AdaptiveCard'
-				version   = '1.2'
-				body      = @(
-					@{
-						type = 'TextBlock'
-						text = $prefixedMessage
-						wrap = $true
-						size = 'Medium'
-					}
-				)
-			}
-
-			$attachments = @(
-				@{
-					contentType = 'application/vnd.microsoft.card.adaptive'
-					content     = $cardContent
-				}
-			)
-
-			$payload = @{
-				attachments = $attachments
-			}
-
-			# 日本語文字化け対策
-			$jsonPayload = $payload | ConvertTo-Json -Depth 10 -Compress
-			$convertedText = [System.Text.Encoding]::UTF8.GetBytes($jsonPayload)
-
-			Invoke-RestMethod -Uri $teamsConfig.flowUrl -Method POST -Body $convertedText -ContentType "application/json; charset=utf-8"
-			Write-Verbose "Teams通知を送信しました (アダプティブカード)"
-			return $true
+		# 必須設定の確認
+		if (-not $teamsConfig.teamId) {
+			Write-Warning "Teams Team IDが設定されていません"
+			return $false
 		}
 
-		# スレッドTS管理ファイルのパス（Teamsは独自のファイル）
-		$statusPath = Join-Path (Split-Path $PSScriptRoot -Parent) "status"
-		$threadTsFile = if ($threadConfig.tsStoragePath) {
-			Join-Path (Split-Path $PSScriptRoot -Parent) $threadConfig.tsStoragePath
-		}
-		else {
-			Join-Path $statusPath "teams_thread_ts.json"
+		if (-not $teamsConfig.channelId) {
+			Write-Warning "Teams Channel IDが設定されていません"
+			return $false
 		}
 
-		# 既存のスレッドIDを確認
-		$threadId = $null
-		if (Test-Path $threadTsFile) {
-			try {
-				$threadData = Get-Content $threadTsFile -Raw | ConvertFrom-Json
-				if ($threadConfig.perMachine -and $threadData.$serialNumber) {
-					$threadId = $threadData.$serialNumber
-					Write-Verbose "既存のTeamsスレッドID取得 (perMachine): $threadId"
-				}
-				elseif (-not $threadConfig.perMachine -and $threadData.global) {
-					$threadId = $threadData.global
-					Write-Verbose "既存のTeamsスレッドID取得 (global): $threadId"
-				}
-			}
-			catch {
-				Write-Warning "TeamsスレッドTSファイル読み込みエラー: $($_.Exception.Message)"
-			}
-		}
+		# マシンIDの取得・生成
+		$machineId = Get-OrCreate-MachineId -StoragePath $teamsConfig.idStoragePath
 
-		# スレッドIDが存在しない場合は新規作成
-		if (-not $threadId) {
-			$threadId = [System.Guid]::NewGuid().ToString().Substring(0, 8)
-			Write-Verbose "新しいTeamsスレッドID生成: $threadId"
+		# 改行文字を適切に処理
+		$processedMessage = $Message -replace "`r`n", "`n" -replace "`r", "`n"
 
-			# スレッドIDを保存
-			$threadData = @{}
-			if (Test-Path $threadTsFile) {
-				try {
-					$threadData = Get-Content $threadTsFile -Raw | ConvertFrom-Json
-				}
-				catch {
-					Write-Warning "既存TeamsスレッドTSファイル読み込みエラー: $($_.Exception.Message)"
-					$threadData = @{}
-				}
-			}
+		# デバッグ用：元のメッセージと処理後のメッセージをログ出力
+		Write-Verbose "元のメッセージ: $Message"
+		Write-Verbose "改行正規化後: $processedMessage"
 
-			if ($threadConfig.perMachine) {
-				$threadData | Add-Member -NotePropertyName $serialNumber -NotePropertyValue $threadId -Force
-			}
-			else {
-				$threadData | Add-Member -NotePropertyName "global" -NotePropertyValue $threadId -Force
-			}
+		# Teams対応の改行処理（HTML改行タグを使用）
+		# Power Automate側でcontentType: "html"を指定することで<br>タグが正しく反映される
+		$htmlMessage = $processedMessage -replace "`n", "<br>"
+		Write-Verbose "HTML改行タグ適用後: $htmlMessage"
 
-			# statusディレクトリが存在しない場合は作成
-			$parentDir = Split-Path $threadTsFile -Parent
-			if (-not (Test-Path $parentDir)) {
-				New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
-			}
-
-			$threadData | ConvertTo-Json | Out-File -FilePath $threadTsFile -Encoding UTF8
-		}
-
-		# アダプティブカードコンテンツ作成（スレッド対応）
-		$cardContent = @{
-			'$schema' = 'http://adaptivecards.io/schemas/adaptive-card.json'
-			type      = 'AdaptiveCard'
-			version   = '1.2'
-			body      = @(
-				@{
-					type = 'TextBlock'
-					text = $prefixedMessage
-					wrap = $true
-					size = 'Medium'
-				}
-			)
-		}
-
-		$attachments = @(
-			@{
-				contentType = 'application/vnd.microsoft.card.adaptive'
-				content     = $cardContent
-			}
-		)
-
-		# ペイロード作成（スレッドID付き）
+		# 新しいペイロード形式
 		$payload = @{
-			attachments = $attachments
-			threadId    = $threadId
+			id         = $machineId
+			team_id    = $teamsConfig.teamId
+			channel_id = $teamsConfig.channelId
+			message    = $htmlMessage
 		}
 
-		# 日本語文字化け対策
-		$jsonPayload = $payload | ConvertTo-Json -Depth 10 -Compress
+		# 日本語文字化け対策（改行を保持）
+		$jsonPayload = $payload | ConvertTo-Json
+		Write-Verbose "送信するJSONペイロード: $jsonPayload"
 		$convertedText = [System.Text.Encoding]::UTF8.GetBytes($jsonPayload)
 
-		# Teams Flow呼び出し
-		Invoke-RestMethod -Uri $teamsConfig.flowUrl -Method POST -Body $convertedText -ContentType "application/json; charset=utf-8"
+		# PowerAutomateフロー呼び出し
+		$headers = @{
+			"Content-Type" = "application/json; charset=utf-8"
+		}
 
-		Write-Verbose "Teams通知を送信しました (アダプティブカード, スレッドID: $threadId)"
+		Invoke-RestMethod -Uri $teamsConfig.flowUrl -Method POST -Headers $headers -Body $convertedText
+
+		Write-Verbose "Teams通知を送信しました (新スレッド方式, マシンID: $machineId)"
 		return $true
 
 	}
@@ -482,8 +435,8 @@ function Send-Notification {
 	}
 }
 
-# スレッドTSクリア関数（テスト用）
-function Clear-NotificationThreads {
+# マシンIDクリア関数（テスト用）
+function Clear-MachineIds {
 	param(
 		[string]$SerialNumber,
 		[switch]$All,
@@ -516,17 +469,17 @@ function Clear-NotificationThreads {
 		}
 
 		if ($Provider -eq "Teams" -or $Provider -eq "Both") {
-			$teamsThreadFile = Join-Path $statusPath "teams_thread_ts.json"
-			if (Test-Path $teamsThreadFile) {
+			$teamsMachineIdFile = Join-Path $statusPath "teams_machine_ids.json"
+			if (Test-Path $teamsMachineIdFile) {
 				if ($All) {
-					Remove-Item $teamsThreadFile -Force
-					Write-Verbose "Teamsスレッドファイルを全削除しました"
+					Remove-Item $teamsMachineIdFile -Force
+					Write-Verbose "TeamsマシンIDファイルを全削除しました"
 				}
 				else {
-					$threadData = Get-Content $teamsThreadFile -Raw | ConvertFrom-Json
-					$threadData.PSObject.Properties.Remove($SerialNumber)
-					$threadData | ConvertTo-Json | Out-File -FilePath $teamsThreadFile -Encoding UTF8
-					Write-Verbose "Teamsスレッド '$SerialNumber' をクリアしました"
+					$machineIds = Get-Content $teamsMachineIdFile -Raw | ConvertFrom-Json
+					$machineIds.PSObject.Properties.Remove($SerialNumber)
+					$machineIds | ConvertTo-Json | Out-File -FilePath $teamsMachineIdFile -Encoding UTF8
+					Write-Verbose "TeamsマシンID '$SerialNumber' をクリアしました"
 				}
 			}
 		}
@@ -534,7 +487,7 @@ function Clear-NotificationThreads {
 		return $true
 	}
 	catch {
-		Write-Warning "スレッドクリアでエラー: $($_.Exception.Message)"
+		Write-Warning "マシンIDクリアでエラー: $($_.Exception.Message)"
 		return $false
 	}
 }

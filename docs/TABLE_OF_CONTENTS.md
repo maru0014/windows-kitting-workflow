@@ -20,8 +20,7 @@
 ### 🔔 通知機能を設定したい方
 1. **[共通通知ライブラリ](Common-Notification-Library.md)** - 通知機能の共通化実装
 2. **[Slackスレッドガイド](Slack-Thread-Guide.md)** - Slack通知の基本設定
-3. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - Teams通知の基本実装
-4. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - 高度なTeams通知
+3. **[Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md)** - Teams通知の新スレッド化方式
 
 ### 🧪 テスト・診断を行いたい方
 1. **[テスト・診断ガイド](Testing-Guide.md)** - テストツールの使用方法
@@ -30,8 +29,7 @@
 ### 🔧 開発・保守担当者
 1. **[共通通知ライブラリ](Common-Notification-Library.md)** - 通知機能の共通化アーキテクチャ
 2. **[WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md)** - 共通処理の実装詳細
-3. **[Teams通知機能強化](Teams-Notifications-Enhancement.md)** - 通知機能の技術詳細
-4. **[Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)** - アダプティブカード技術詳細
+3. **[Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md)** - 新スレッド化方式の技術詳細
 
 ## 📂 機能別ドキュメント一覧
 
@@ -51,8 +49,7 @@
 |-------------|--------|------|
 | [共通通知ライブラリ](Common-Notification-Library.md) | 開発者 | 通知機能の共通化と統一化 |
 | [Slackスレッドガイド](Slack-Thread-Guide.md) | 中級者 | Slack通知機能の詳細 |
-| [Teams通知機能強化](Teams-Notifications-Enhancement.md) | 開発者 | Teams通知の基本実装 |
-| [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md) | 開発者 | 高度なTeams通知実装 |
+| [Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md) | 開発者 | Teams通知の新スレッド化方式 |
 
 ### 🧪 テスト・サポート
 | ドキュメント | 対象者 | 内容 |
@@ -82,7 +79,7 @@
 1. [レジストリ設定ガイド](Registry-Configuration.md) → 2. [Windows Updateガイド](Windows-Update-Guide.md) → 3. [自動ログインREADME](AutoLogin-README.md)
 
 ### 👨‍💻 開発者（機能拡張・改修を行いたい）
-1. [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) → 2. [Teams通知機能強化](Teams-Notifications-Enhancement.md) → 3. [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)
+1. [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) → 2. [Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md)
 
 ## 🔗 ドキュメント間の関連性
 
@@ -97,8 +94,8 @@ graph TD
     C --> G[Wi-Fi設定]
     C --> H[Slack通知]
     
-    H --> I[Teams通知基本]
-    I --> J[Teams アダプティブカード]
+    H --> I[Teams通知新スレッド化]
+
     
     D --> K[テスト・診断]
     D --> L[自動ログイン]

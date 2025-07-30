@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # 通知機能テストツール
 # Slack/Teams通知の動作確認とスレッド機能のテスト
 # ==============================================================================
@@ -108,7 +108,7 @@ function Test-SlackNotification {
 }
 
 function Test-TeamsNotification {
-    Write-Log "=== Teams通知テスト ===" -Level "INFO"
+    Write-Log "=== Teams通知テスト（新スレッド方式） ===" -Level "INFO"
 
     $teamsConfig = $notificationConfig.notifications.providers.teams
     if (-not $teamsConfig.enabled) {
@@ -116,7 +116,7 @@ function Test-TeamsNotification {
         return
     }
 
-    $testMessage = "📧 テスト通知: Teams機能の動作確認 - $(Get-Date -Format 'HH:mm:ss')"
+    $testMessage = "📧 テスト通知: Teams新スレッド方式の動作確認 - $(Get-Date -Format 'HH:mm:ss')"
 
     try {
         # Flow URL設定チェック
@@ -125,13 +125,20 @@ function Test-TeamsNotification {
             return
         }
 
-        # スレッド機能のテスト
-        if ($teamsConfig.thread -and $teamsConfig.thread.enabled) {
-            Write-Log "スレッド機能有効でテスト実行" -Level "INFO"
-        } else {
-            Write-Log "通常モードでテスト実行" -Level "INFO"
+        # 必須設定の確認
+        if (-not $teamsConfig.teamId) {
+            Write-Log "Teams Team IDが設定されていません" -Level "WARN"
+            return
         }
 
+        if (-not $teamsConfig.channelId) {
+            Write-Log "Teams Channel IDが設定されていません" -Level "WARN"
+            return
+        }
+
+        Write-Log "新スレッド方式でテスト実行" -Level "INFO"
+        Write-Log "Team ID: $($teamsConfig.teamId)" -Level "INFO"
+        Write-Log "Channel ID: $($teamsConfig.channelId)" -Level "INFO"
         Write-Log "テストメッセージ: $testMessage" -Level "INFO"
         Write-Log "Teams通知テスト完了" -Level "INFO"
     }
@@ -157,7 +164,9 @@ function Show-NotificationInfo {
     Write-Log "Teams有効: $($teamsConfig.enabled)" -Level "INFO"
     if ($teamsConfig.enabled) {
         Write-Log "Flow URL設定: $(if ($teamsConfig.flowUrl -and $teamsConfig.flowUrl -ne 'https://your-teams-flow-url-here') { '設定済み' } else { '未設定' })" -Level "INFO"
-        Write-Log "スレッド機能: $($teamsConfig.thread.enabled)" -Level "INFO"
+        Write-Log "Team ID設定: $(if ($teamsConfig.teamId) { '設定済み' } else { '未設定' })" -Level "INFO"
+        Write-Log "Channel ID設定: $(if ($teamsConfig.channelId) { '設定済み' } else { '未設定' })" -Level "INFO"
+        Write-Log "マシンID保存パス: $($teamsConfig.idStoragePath)" -Level "INFO"
     }
 }
 
@@ -173,11 +182,11 @@ function Clear-ThreadData {
         Write-Log "Slackスレッドデータをクリアしました" -Level "INFO"
     }
 
-    # Teamsスレッドデータ
-    $teamsThreadFile = Join-Path $statusPath "teams_thread_ts.json"
-    if (Test-Path $teamsThreadFile) {
-        Remove-Item $teamsThreadFile -Force
-        Write-Log "Teamsスレッドデータをクリアしました" -Level "INFO"
+    # TeamsマシンIDデータ
+    $teamsMachineIdFile = Join-Path $statusPath "teams_machine_ids.json"
+    if (Test-Path $teamsMachineIdFile) {
+        Remove-Item $teamsMachineIdFile -Force
+        Write-Log "TeamsマシンIDデータをクリアしました" -Level "INFO"
     }
 
     Write-Log "スレッドデータクリア完了" -Level "INFO"

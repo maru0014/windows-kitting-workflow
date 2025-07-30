@@ -17,7 +17,10 @@
       },
       "teams": {
         "enabled": false,
-        "flowUrl": "https://your-teams-flow-url-here"
+        "flowUrl": "https://your-teams-flow-url-here",
+        "teamId": "2c4e90ab-a1e0-4dee-8f9a-f1b9b2a1667e",
+        "channelId": "19:wOI3_1EgOFnIDVDab8taDWhD_vCLvrLGrZp0zXluvLs1@thread.tacv2",
+        "idStoragePath": "status/teams_machine_ids.json"
       },
       "email": {
         "enabled": false,
@@ -92,9 +95,6 @@
           "warning": "#ffaa00"
         },
         "format": "blocks"
-      },
-      "teams": {
-        "format": "messageCard"
       }
     },
     "retrySettings": {
