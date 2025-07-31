@@ -15,9 +15,27 @@
 ### 処理フロー
 
 1. **ファイル存在確認**: Wi-Fi設定XMLファイルの存在を確認
-2. **プロファイル適用**: `netsh wlan add profile`コマンドでプロファイルを追加
-3. **結果確認**: 現在のWi-Fiプロファイル一覧を表示
-4. **完了記録**: `status\setup-wifi.completed`ファイルを作成
+2. **Wi-Fiアダプター確認**: システムにWi-Fiアダプターが存在し、有効化されているかを確認
+3. **プロファイル適用**: `netsh wlan add profile`コマンドでプロファイルを追加
+4. **結果確認**: 現在のWi-Fiプロファイル一覧を表示
+5. **完了記録**: `status\setup-wifi.completed`ファイルを作成
+
+### Forceオプション
+
+`-Force`オプションを指定すると、以下の動作が可能になります：
+
+- **Wi-Fiアダプターが存在しない場合**: アダプターがなくてもプロファイルの作成を試行
+- **アダプターが無効な場合**: アダプターの有効化をスキップしてプロファイル作成を続行
+- **プロファイル作成に失敗した場合**: エラーでも処理を継続し、完了ステータスを記録
+
+**使用例**:
+```powershell
+# ForceオプションでWi-Fi設定を適用
+.\setup-wifi.ps1 -Force
+
+# Forceオプションで自動接続も実行
+.\setup-wifi.ps1 -Force -Connect
+```
 
 ## Wi-Fi設定XMLファイルの作成方法
 
@@ -104,7 +122,8 @@ Wi-FiパスワードはWindowsの保護されたデータ（DPAPI）で暗号化
 | エラー | 原因 | 対処法 |
 |--------|------|--------|
 | ファイルが見つからない | XMLファイルが存在しない | `config\Wi-Fi-test-wi-fi.xml`が存在することを確認 |
-| プロファイル追加失敗 | Wi-Fiアダプターが無効 | Wi-Fiアダプターを有効化 |
+| プロファイル追加失敗 | Wi-Fiアダプターが無効 | Wi-Fiアダプターを有効化、または`-Force`オプションを使用 |
+| Wi-Fiアダプターが見つからない | システムにWi-Fiアダプターが存在しない | `-Force`オプションを使用してプロファイル作成をスキップ |
 | 権限エラー | 管理者権限なし | 管理者権限でスクリプトを実行 |
 | 暗号化エラー | 異なるユーザー/マシン | 新しい環境でプロファイルを再エクスポート |
 
@@ -179,18 +198,61 @@ netsh wlan delete profile name="test-wi-fi"
 netsh wlan add profile filename="config\Wi-Fi-test-wi-fi.xml"
 ```
 
+### 4. Wi-Fiアダプターが存在しない環境での実行
+
+**原因**: デスクトップPCやWi-Fiアダプターが無効な環境でスクリプトが実行される
+
+**解決策**:
+```powershell
+# Forceオプションを使用してアダプターの確認をスキップ
+.\setup-wifi.ps1 -Force
+
+# ワークフロー設定でForceオプションを有効化
+# workflow.jsonのsetup-wifiステップに以下を追加:
+# "parameters": { "Force": true }
+```
+
+**注意**: Forceオプションを使用すると、Wi-Fiアダプターが存在しない環境でもプロファイルの作成を試行し、ワークフローを継続できます。
+
 ## workflow.json設定詳細
 
 ### ステップ設定
+
+#### 通常の設定（Wi-Fiアダプターが必要）
 
 ```json
 {
   "id": "setup-wifi",
   "name": "Wi-Fi設定プロファイル適用",
   "description": "Wi-Fi設定プロファイルをシステムに適用",
-  "script": "scripts/setup/setup-wifi.bat",
-  "type": "batch",
+  "script": "scripts/setup/setup-wifi.ps1",
+  "type": "powershell",
   "runAsAdmin": true,
+  "completionCheck": {
+    "type": "file",
+    "path": "status/setup-wifi.completed"
+  },
+  "timeout": 120,
+  "retryCount": 2,
+  "rebootRequired": false,
+  "dependsOn": ["init"],
+  "onError": "continue"
+}
+```
+
+#### Forceオプション付き設定（Wi-Fiアダプターが不要）
+
+```json
+{
+  "id": "setup-wifi",
+  "name": "Wi-Fi設定プロファイル適用",
+  "description": "Wi-Fi設定プロファイルをシステムに適用（Forceモード）",
+  "script": "scripts/setup/setup-wifi.ps1",
+  "type": "powershell",
+  "runAsAdmin": true,
+  "parameters": {
+    "Force": true
+  },
   "completionCheck": {
     "type": "file",
     "path": "status/setup-wifi.completed"
@@ -208,6 +270,7 @@ netsh wlan add profile filename="config\Wi-Fi-test-wi-fi.xml"
 - **onError: "continue"**: Wi-Fiが利用できない環境でもワークフローを継続
 - **retryCount: 2**: ネットワーク関連のエラーに対応するため2回リトライ
 - **timeout: 120**: プロファイル適用に十分な時間を確保
+- **parameters.Force**: Forceオプションを有効化（Wi-Fiアダプターが不要な環境で使用）
 
 ## 参考資料
 
