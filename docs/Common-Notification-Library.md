@@ -83,7 +83,7 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
 
 | 関数名 | 説明 |
 |--------|------|
-| `Clear-NotificationThreads` | 全通知スレッドをクリア |
+| `Clear-MachineIds` | マシンIDをクリア（テスト用） |
 
 ## 🔧 設定ファイル
 
@@ -107,14 +107,10 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
       },
       "teams": {
         "enabled": true,
-        "webhook": {
-          "url": "https://outlook.office.com/webhook/YOUR/TEAMS/WEBHOOK"
-        },
-        "thread": {
-          "enabled": true,
-          "perMachine": true,
-          "tsStoragePath": "status/teams_thread_ts.json"
-        }
+        "flowUrl": "https://your-teams-flow-url-here",
+        "teamId": "your-team-id",
+        "channelId": "your-channel-id",
+        "idStoragePath": "status/teams_machine_ids.json"
       }
     }
   }

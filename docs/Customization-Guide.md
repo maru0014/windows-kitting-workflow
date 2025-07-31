@@ -212,15 +212,20 @@ catch {
    - 生成されたWebhook URLをコピー
    - `notifications.json`の`url`に設定
 
-### Microsoft Teams Webhook設定
+### Microsoft Teams設定
 
 ```json
 {
   "notifications": {
     "enabled": true,
-    "webhook": {
-      "url": "https://outlook.office.com/webhook/YOUR-TEAMS-WEBHOOK-URL",
-      "type": "teams"
+    "providers": {
+      "teams": {
+        "enabled": true,
+        "flowUrl": "https://your-teams-flow-url-here",
+        "teamId": "your-team-id",
+        "channelId": "your-channel-id",
+        "idStoragePath": "status/teams_machine_ids.json"
+      }
     }
   }
 }

@@ -113,12 +113,12 @@ Teams通知機能の改善実装詳細
 - 設定ファイルの変更方法
 - 実装例とトラブルシューティング
 
-### 🎨 [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md)
-Teams通知のアダプティブカード対応実装
-- MessageCardからAdaptive Cardへの移行
-- PC名プレフィックスの追加
-- スレッド機能の技術詳細
-- API使用例と実装方法
+### 🎨 [Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md)
+Teams通知の新スレッド化方式実装
+- 改良版PowerAutomateフローとの連携
+- マシンIDベースの真のスレッド化
+- 複数台同時実行時のメッセージ分離
+- 設定方法とトラブルシューティング
 
 ### ⚡ [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md)
 WorkflowRoot取得処理の改善実装

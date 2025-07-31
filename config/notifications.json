@@ -17,7 +17,10 @@
       },
       "teams": {
         "enabled": false,
-        "flowUrl": "https://your-teams-flow-url-here"
+        "flowUrl": "https://your-teams-flow-url-here",
+        "teamId": "YOUR-TEAM-ID-HERE",
+        "channelId": "YOUR-CHANNEL-ID-HERE",
+        "idStoragePath": "status/teams_machine_ids.json"
       },
       "email": {
         "enabled": false,
@@ -92,9 +95,6 @@
           "warning": "#ffaa00"
         },
         "format": "blocks"
-      },
-      "teams": {
-        "format": "messageCard"
       }
     },
     "retrySettings": {
