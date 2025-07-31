@@ -1,5 +1,9 @@
 rem Wi-Fi設定プロファイル適用
 rem 詳細: docs\Wi-Fi-Configuration-Guide.md を参照
+rem 使用方法: setup-wifi.bat [Wi-FiプロファイルXMLファイルのパス]
+rem 例: setup-wifi.bat config\office-wifi.xml
+rem 引数を指定しない場合: config\wi-fi.xml が使用されます
+
 echo === Wi-Fi設定プロファイル適用開始 ===
 echo Wi-Fi設定プロファイルを適用します。
 echo 詳細情報: docs\Wi-Fi-Configuration-Guide.md
@@ -10,12 +14,23 @@ cd /d "%~dp0\..\.."
 rem statusディレクトリが存在しない場合は作成
 if not exist "status" mkdir status
 
-rem Wi-Fi設定プロファイルファイルのパス
-set WIFI_PROFILE_PATH=config\Wi-Fi-test-wi-fi.xml
+rem Wi-Fi設定プロファイルファイルのパス（引数から取得、デフォルトは固定パス）
+if "%~1"=="" (
+    set WIFI_PROFILE_PATH=config\wi-fi.xml
+    echo 引数が指定されていないため、デフォルトのプロファイルを使用します: %WIFI_PROFILE_PATH%
+) else (
+    set WIFI_PROFILE_PATH=%~1
+    echo 指定されたプロファイルを使用します: %WIFI_PROFILE_PATH%
+)
 
 rem Wi-Fi設定プロファイルファイルの存在確認
 if not exist "%WIFI_PROFILE_PATH%" (
     echo エラー: Wi-Fi設定プロファイルファイルが見つかりません: %WIFI_PROFILE_PATH%
+    echo.
+    echo 使用方法:
+    echo   setup-wifi.bat [Wi-FiプロファイルXMLファイルのパス]
+    echo   例: setup-wifi.bat config\office-wifi.xml
+    echo   引数を指定しない場合: config\wi-fi.xml が使用されます
     exit /b 1
 )
 

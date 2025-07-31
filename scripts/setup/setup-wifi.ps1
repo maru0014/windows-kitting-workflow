@@ -22,7 +22,7 @@ Wi-Fi設定プロファイル適用スクリプト
 
 パラメータ:
     -ProfilePath <path>        Wi-FiプロファイルXMLファイルのパス
-                               (デフォルト: config\Wi-Fi-test-wi-fi.xml)
+                               (デフォルト: config\wi-fi.xml)
 
     -ProfileName <name>        適用するプロファイル名を指定
                                XMLファイル内のプロファイル名を指定
@@ -307,7 +307,7 @@ try {
 
 	# プロファイルパスの設定
 	if (-not $ProfilePath) {
-		$ProfilePath = Get-WorkflowPath -PathType "Config" -SubPath "Wi-Fi-test-wi-fi.xml"
+		$ProfilePath = Get-WorkflowPath -PathType "Config" -SubPath "wi-fi.xml"
 	}
 
 	# プロファイルの適用

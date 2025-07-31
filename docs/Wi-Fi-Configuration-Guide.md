@@ -8,7 +8,7 @@
 
 ### 自動適用される設定
 
-- **対象プロファイル**: `config\Wi-Fi-test-wi-fi.xml`で定義されたWi-Fiプロファイル
+- **対象プロファイル**: `config\wi-fi.xml`で定義されたWi-Fiプロファイル
 - **実行タイミング**: ワークフローの初期化（init）ステップの直後
 - **実行スクリプト**: `scripts\setup\setup-wifi.bat`
 
@@ -59,7 +59,7 @@ netsh wlan export profile name="プロファイル名" folder=C:\temp key=clear
 ### 手順3: XMLファイルの配置
 
 1. エクスポートしたXMLファイルを確認
-2. ファイル名を `Wi-Fi-test-wi-fi.xml` に変更
+2. ファイル名を `wi-fi.xml` に変更
 3. `config\` フォルダに配置
 
 ## セキュリティ考慮事項
@@ -121,7 +121,7 @@ Wi-FiパスワードはWindowsの保護されたデータ（DPAPI）で暗号化
 
 | エラー | 原因 | 対処法 |
 |--------|------|--------|
-| ファイルが見つからない | XMLファイルが存在しない | `config\Wi-Fi-test-wi-fi.xml`が存在することを確認 |
+| ファイルが見つからない | XMLファイルが存在しない | `config\wi-fi.xml`が存在することを確認 |
 | プロファイル追加失敗 | Wi-Fiアダプターが無効 | Wi-Fiアダプターを有効化、または`-Force`オプションを使用 |
 | Wi-Fiアダプターが見つからない | システムにWi-Fiアダプターが存在しない | `-Force`オプションを使用してプロファイル作成をスキップ |
 | 権限エラー | 管理者権限なし | 管理者権限でスクリプトを実行 |
@@ -195,7 +195,7 @@ netsh wlan set profileparameter name="test-wi-fi" connectionmode=auto
 ```cmd
 # 既存プロファイルを削除してから追加
 netsh wlan delete profile name="test-wi-fi"
-netsh wlan add profile filename="config\Wi-Fi-test-wi-fi.xml"
+netsh wlan add profile filename="config\wi-fi.xml"
 ```
 
 ### 4. Wi-Fiアダプターが存在しない環境での実行
