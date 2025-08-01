@@ -120,5 +120,7 @@ function Get-CompletionMarkerPath {
     param(
         [Parameter(Mandatory = $true)]
         [string]$TaskName
-    )    return Get-WorkflowPath -PathType "Status" -SubPath "$TaskName.completed"
+    )
+
+    return Get-WorkflowPath -PathType "Status" -SubPath "${TaskName}.completed"
 }
