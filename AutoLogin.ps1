@@ -1,6 +1,7 @@
 ﻿# ============================================================================
 # 自動ログイン設定管理スクリプト
 # Windows Kitting Workflow用自動ログイン設定の作成と削除
+# workflow.jsonのパラメータまたは対話入力で設定を管理
 # ============================================================================
 
 param(
@@ -19,28 +20,11 @@ param(
 # 共通ログ関数の読み込み
 . (Join-Path $PSScriptRoot "scripts\Common-LogFunctions.ps1")
 
-# JSONファイルから自動ログイン設定を読み込む
-function Get-AutoLoginConfigFromJson {
-	try {
-		$configPath = Join-Path $PSScriptRoot "config\autologin.json"
-
-		if (-not (Test-Path $configPath)) {
-			Write-Log "設定ファイルが見つかりません: $configPath" -Level "WARN"
-			return $null
-		}
-
-		$config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-
-		if (-not $config.autologin) {
-			Write-Log "設定ファイルに autologin セクションが見つかりません" -Level "WARN"
-			return $null
-		}
-
-		return $config.autologin
-	}
-	catch {
-		Write-Log "設定ファイルの読み込みでエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
-		return $null
+# 自動ログイン設定のデフォルト値を取得
+function Get-AutoLoginDefaults {
+	return @{
+		autoLogonCount = 999
+		forcePasswordPrompt = $false
 	}
 }
 
@@ -92,48 +76,24 @@ function Set-AutoLogin {
 	try {
 		Write-Log "自動ログイン設定を開始します"
 
-		# JSONファイルから設定を読み込む
-		$config = Get-AutoLoginConfigFromJson
-
-		# パラメータが指定されていない場合、JSONファイルまたは現在のユーザー情報を使用
+		# パラメータが指定されていない場合、現在のユーザー情報を使用または対話入力
 		if (-not $Username -or -not $Password) {
 			$userInfo = Get-CurrentUserInfo
-
-			# JSONファイルからの設定を優先
-			if ($config -and $config.credentials) {
-				if (-not $Username -and $config.credentials.username) {
-					$Username = $config.credentials.username
-					Write-Log "JSONファイルからユーザー名を読み込みました: $Username"
-				}
-
-				if (-not $Password -and $config.credentials.password) {
-					$Password = $config.credentials.password
-					Write-Log "JSONファイルからパスワードを読み込みました"
-				}
-
-				if (-not $Domain -and $config.credentials.domain) {
-					$Domain = $config.credentials.domain
-					Write-Log "JSONファイルからドメインを読み込みました: $Domain"
-				}
-			}
 
 			# まだ設定されていない場合は現在のユーザー情報を使用
 			if (-not $Username) {
 				$Username = $userInfo.Username
+				Write-Log "現在のユーザー名を使用します: $Username"
 			}
 
 			if (-not $Domain) {
 				$Domain = $userInfo.Domain
+				Write-Log "現在のドメインを使用します: $Domain"
 			}
 
 			# パスワードがまだ設定されていない場合は入力を求める
 			if (-not $Password) {
-				# forcePasswordPromptが設定されている場合は常に入力を求める
-				$forcePrompt = $config -and $config.settings -and $config.settings.forcePasswordPrompt
-
-				if ($forcePrompt) {
-					Write-Log "設定により、パスワードの入力を求めます"
-				}
+				Write-Log "パスワードが指定されていないため、対話入力で設定します"
 
 				# パスワードの入力を求める（2回入力による確認）
 				do {
@@ -195,10 +155,8 @@ function Set-AutoLogin {
 			Set-ItemProperty -Path $regPath -Name "DefaultDomainName" -Value $Domain -Type String
 		}
 		# セキュリティ設定：自動ログイン回数を設定
-		$autoLogonCount = 999
-		if ($config -and $config.settings -and $config.settings.autoLogonCount) {
-			$autoLogonCount = $config.settings.autoLogonCount
-		}
+		$defaults = Get-AutoLoginDefaults
+		$autoLogonCount = $defaults.autoLogonCount
 		Set-ItemProperty -Path $regPath -Name "AutoLogonCount" -Value $autoLogonCount -Type DWord
 
 		Write-Log "自動ログイン設定が完了しました"
@@ -317,28 +275,11 @@ function Get-AutoLoginStatus {
 		Write-Log "  ドメイン: $domain"
 		Write-Log "  残り回数: $count"
 
-		# JSONファイルの設定も表示
-		$config = Get-AutoLoginConfigFromJson
-		if ($config) {
-			Write-Log "JSONファイルの設定:"
-			Write-Log "  有効: $($config.enabled)"
-			if ($config.credentials.username) {
-				Write-Log "  設定ユーザー: $($config.credentials.username)"
-			}
-			if ($config.credentials.password) {
-				Write-Log "  パスワード: 設定済み"
-			}
-			else {
-				Write-Log "  パスワード: 未設定（実行時入力）"
-			}
-			if ($config.credentials.domain) {
-				Write-Log "  設定ドメイン: $($config.credentials.domain)"
-			}
-			if ($config.settings) {
-				Write-Log "  自動ログイン回数: $($config.settings.autoLogonCount)"
-				Write-Log "  強制パスワード入力: $($config.settings.forcePasswordPrompt)"
-			}
-		}
+		# デフォルト設定を表示
+		$defaults = Get-AutoLoginDefaults
+		Write-Log "デフォルト設定:"
+		Write-Log "  自動ログイン回数: $($defaults.autoLogonCount)"
+		Write-Log "  強制パスワード入力: $($defaults.forcePasswordPrompt)"
 
 	}
  catch {
@@ -353,41 +294,7 @@ function Test-AdminRights {
 	return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
-# 設定ファイルの初期化
-function Initialize-AutoLoginConfig {
-	try {
-		$configPath = Join-Path $PSScriptRoot "config\autologin.json"
 
-		if (-not (Test-Path $configPath)) {
-			$configDir = Split-Path $configPath -Parent
-			if (-not (Test-Path $configDir)) {
-				New-Item -ItemType Directory -Path $configDir -Force | Out-Null
-			}
-
-			$defaultConfig = @{
-				autologin = @{
-					enabled     = $true
-					credentials = @{
-						username = ""
-						password = ""
-						domain   = ""
-					}
-					settings    = @{
-						autoLogonCount      = 999
-						forcePasswordPrompt = $false
-						description         = "自動ログイン設定。username/passwordが空の場合は実行時に入力を求めます。"
-					}
-				}
-			}
-
-			$defaultConfig | ConvertTo-Json -Depth 3 | Out-File -FilePath $configPath -Encoding UTF8
-			Write-Log "デフォルトの設定ファイルを作成しました: $configPath"
-		}
-	}
-	catch {
-		Write-Log "設定ファイルの初期化でエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
-	}
-}
 
 # メイン処理
 try {
@@ -408,28 +315,28 @@ try {
 		}
 	}
 
-	# 設定ファイルの初期化
-	Initialize-AutoLoginConfig
+	# 設定ディレクトリの作成
+	$statusDir = Join-Path $PSScriptRoot "status"
+	if (-not (Test-Path $statusDir)) {
+		New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
+	}
 
 	# アクションに応じて処理実行
 	switch ($Action) {
 		"Setup" {
-			# JSONファイルからの設定を確認
-			$config = Get-AutoLoginConfigFromJson
-			if ($config) {
-				Write-Log "自動ログイン設定ファイルから設定を読み込みました"
-				if ($config.credentials.username) {
-					Write-Log "設定ファイルにユーザー名が設定されています: $($config.credentials.username)"
-				}
-				if ($config.credentials.password) {
-					Write-Log "設定ファイルにパスワードが設定されています"
-				}
-				if ($config.credentials.domain) {
-					Write-Log "設定ファイルにドメインが設定されています: $($config.credentials.domain)"
-				}
+			# パラメータの確認
+			Write-Log "自動ログイン設定のパラメータを確認します"
+			if ($Username) {
+				Write-Log "ユーザー名が指定されています: $Username"
 			}
-			else {
-				Write-Log "設定ファイルが見つからないか、読み込みに失敗しました。パラメータまたは対話入力を使用します"
+			if ($Password) {
+				Write-Log "パスワードが指定されています"
+			}
+			if ($Domain) {
+				Write-Log "ドメインが指定されています: $Domain"
+			}
+			if (-not $Username -or -not $Password) {
+				Write-Log "ユーザー名またはパスワードが指定されていないため、対話入力で設定します"
 			}
 
 			# 現在の設定を表示
