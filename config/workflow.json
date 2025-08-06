@@ -73,13 +73,16 @@
       {
         "id": "autologin-setup",
         "name": "自動ログイン設定",
-        "description": "セットアップ期間中の自動ログイン設定（config/autologin.jsonの設定を使用）",
+        "description": "セットアップ期間中の自動ログイン設定（workflow.jsonのパラメータまたは対話入力で設定）",
         "script": "AutoLogin.ps1",
         "type": "powershell",
         "runAsAdmin": true,
         "parameters": {
           "Action": "Setup",
-          "Force": true
+          "Force": true,
+          "Username": "",
+          "Password": "",
+          "Domain": ""
         },
         "completionCheck": {
           "type": "file",
@@ -358,7 +361,10 @@
         "runAsAdmin": true,
         "parameters": {
           "Action": "Remove",
-          "Force": true
+          "Force": true,
+          "Username": "",
+          "Password": "",
+          "Domain": ""
         },
         "completionCheck": {
           "type": "file",

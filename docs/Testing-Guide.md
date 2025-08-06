@@ -77,8 +77,8 @@ Windows Kitting Workflowプロジェクトには、設定ファイル、プロ�
    - 必須の`id`と`installMethod`を持つアプリケーションオブジェクト
    - メソッド固有の検証（wingetには`packageId`、msi/exeには`installerPath`が必要）
 
-4. **autologin.json**:
-   - 基本構造の検証
+4. **workflow.json autologin設定**:
+   - autologin-setupステップのパラメータ検証
    - 認証情報フォーマットのチェック
 
 ### Test-ProjectStructure.ps1 - プロジェクト構造検証

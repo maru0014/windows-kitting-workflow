@@ -99,7 +99,7 @@ Wi-Fi自動設定機能の詳細説明
 
 ### 🔐 [自動ログインREADME](AutoLogin-README.md)
 自動ログイン機能の詳細説明
-- 設定ファイル（autologin.json）
+- workflow.jsonでの設定方法
 - 使用方法
 - セキュリティ考慮事項
 - トラブルシューティング
