@@ -2,6 +2,7 @@
 # アプリケーションインストールスクリプト
 # JSONファイルで定義されたアプリケーションの一括インストール
 # winget、MSI、EXEファイルのインストールに対応
+# タイムアウト機能とパスチェック機能をサポート
 # ============================================================================
 
 param(
@@ -70,6 +71,19 @@ if ($Help) {
 
     # 静かなモード（コンソール出力なし）
     .\install-basic-apps.ps1 -Quiet
+
+タイムアウト機能について:
+    MSI/EXEアプリケーションでtimeoutとcheckPathを設定できます:
+    - timeout: タイムアウト時間（秒、デフォルト: 300秒）
+    - checkPath: タイムアウト後の成功判定用パス
+
+    例: applications.json
+    {
+      "id": "custom-app",
+      "installMethod": "msi",
+      "timeout": 600,
+      "checkPath": "C:\\Program Files\\CustomApp\\app.exe"
+    }
 
 "@ -ForegroundColor Cyan
 	exit 0
@@ -324,31 +338,74 @@ function Install-MsiPackage {
 
 		Write-Log "💻 実行コマンド: msiexec.exe $($msiArgs -join ' ')"
 
+		# タイムアウト設定の確認
+		$timeout = if ($App.timeout) { $App.timeout } else { 300 } # デフォルト5分
+		Write-Log "⏱️  タイムアウト設定: $timeout秒"
+
 		$startTime = Get-Date
-		$process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -Wait -PassThru -NoNewWindow
+		$process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -PassThru -NoNewWindow
+
+		# タイムアウト処理
+		$timedOut = $false
+		try {
+			if (-not $process.WaitForExit($timeout * 1000)) {
+				Write-Log "⏰ タイムアウトしました ($timeout秒)。プロセスを終了します..." -Level "WARN"
+				$process.Kill()
+				$timedOut = $true
+			}
+		}
+		catch {
+			Write-Log "⚠️  プロセス待機中にエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
+			$timedOut = $true
+		}
 
 		$duration = ((Get-Date) - $startTime).TotalSeconds
 
-		if ($process.ExitCode -eq 0) {
-			Write-Log "✅ MSIパッケージのインストールが完了しました: $($App.name) (所要時間: $([math]::Round($duration, 1))秒)"
-			return $true
+		# 成功判定
+		$success = $false
+		if ($timedOut) {
+			# タイムアウトした場合はパスチェックで判定
+			if ($App.checkPath) {
+				Write-Log "🔍 タイムアウト後のパスチェック: $($App.checkPath)"
+				if (Test-Path $App.checkPath) {
+					Write-Log "✅ パスチェック成功: $($App.checkPath)"
+					$success = $true
+				}
+				else {
+					Write-Log "❌ パスチェック失敗: $($App.checkPath) が見つかりません" -Level "ERROR"
+					$success = $false
+				}
+			}
+			else {
+				Write-Log "❌ タイムアウトしましたが、checkPathが設定されていません" -Level "ERROR"
+				$success = $false
+			}
 		}
 		else {
-			$errorMessage = switch ($process.ExitCode) {
-				1 { "一般的なエラー" }
-				2 { "ファイルが見つかりません" }
-				3 { "パスが見つかりません" }
-				1602 { "ユーザーによってインストールがキャンセルされました" }
-				1603 { "インストール中に致命的なエラーが発生しました" }
-				1618 { "他のインストールが進行中です" }
-				1619 { "インストールパッケージを開くことができませんでした" }
-				1622 { "ログファイルを開くことができませんでした" }
-				1633 { "このプラットフォームはサポートされていません" }
-				default { "エラーコード: $($process.ExitCode)" }
+			# 正常終了の場合はExitCodeで判定
+			if ($process.ExitCode -eq 0) {
+				Write-Log "✅ MSIパッケージのインストールが完了しました: $($App.name) (所要時間: $([math]::Round($duration, 1))秒)"
+				$success = $true
 			}
-			Write-Log "❌ MSIパッケージのインストールに失敗しました: $($App.name) ($errorMessage)" -Level "ERROR"
-			return $false
+			else {
+				$errorMessage = switch ($process.ExitCode) {
+					1 { "一般的なエラー" }
+					2 { "ファイルが見つかりません" }
+					3 { "パスが見つかりません" }
+					1602 { "ユーザーによってインストールがキャンセルされました" }
+					1603 { "インストール中に致命的なエラーが発生しました" }
+					1618 { "他のインストールが進行中です" }
+					1619 { "インストールパッケージを開くことができませんでした" }
+					1622 { "ログファイルを開くことができませんでした" }
+					1633 { "このプラットフォームはサポートされていません" }
+					default { "エラーコード: $($process.ExitCode)" }
+				}
+				Write-Log "❌ MSIパッケージのインストールに失敗しました: $($App.name) ($errorMessage)" -Level "ERROR"
+				$success = $false
+			}
 		}
+
+		return $success
 	}
 	catch {
 		Write-Log "❌ MSIパッケージインストールでエラー: $($App.name) - $($_.Exception.Message)" -Level "ERROR"
@@ -396,27 +453,71 @@ function Install-ExePackage {
 
 		Write-Log "💻 実行コマンド: `"$installerPath`" $($exeArgs -join ' ')"
 
+		# タイムアウト設定の確認
+		$timeout = if ($App.timeout) { $App.timeout } else { 300 } # デフォルト5分
+		Write-Log "⏱️  タイムアウト設定: $timeout秒"
+
 		$startTime = Get-Date
-		$process = Start-Process -FilePath $installerPath -ArgumentList $exeArgs -Wait -PassThru -NoNewWindow
+		$process = Start-Process -FilePath $installerPath -ArgumentList $exeArgs -PassThru -NoNewWindow
+
+		# タイムアウト処理
+		$timedOut = $false
+		try {
+			if (-not $process.WaitForExit($timeout * 1000)) {
+				Write-Log "⏰ タイムアウトしました ($timeout秒)。プロセスを終了します..." -Level "WARN"
+				$process.Kill()
+				$timedOut = $true
+			}
+		}
+		catch {
+			Write-Log "⚠️  プロセス待機中にエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
+			$timedOut = $true
+		}
+
 		$duration = ((Get-Date) - $startTime).TotalSeconds
 
-		if ($process.ExitCode -eq 0) {
-			Write-Log "✅ EXEパッケージのインストールが完了しました: $($App.name) (所要時間: $([math]::Round($duration, 1))秒)"
-			return $true
+		# 成功判定
+		$success = $false
+		if ($timedOut) {
+			# タイムアウトした場合はパスチェックで判定
+			if ($App.checkPath) {
+				Write-Log "🔍 タイムアウト後のパスチェック: $($App.checkPath)"
+				if (Test-Path $App.checkPath) {
+					Write-Log "✅ パスチェック成功: $($App.checkPath)"
+					$success = $true
+				}
+				else {
+					Write-Log "❌ パスチェック失敗: $($App.checkPath) が見つかりません" -Level "ERROR"
+					$success = $false
+				}
+			}
+			else {
+				Write-Log "❌ タイムアウトしましたが、checkPathが設定されていません" -Level "ERROR"
+				$success = $false
+			}
 		}
 		else {
-			$errorMessage = switch ($process.ExitCode) {
-				1 { "一般的なエラー" }
-				2 { "ファイルが見つかりません" }
-				3 { "パスが見つかりません" }
-				5 { "アクセス拒否" }
-				87 { "パラメータエラー" }
-				1223 { "ユーザーによってキャンセルされました" }
-				default { "エラーコード: $($process.ExitCode)" }
+			# 正常終了の場合はExitCodeで判定
+			if ($process.ExitCode -eq 0) {
+				Write-Log "✅ EXEパッケージのインストールが完了しました: $($App.name) (所要時間: $([math]::Round($duration, 1))秒)"
+				$success = $true
 			}
-			Write-Log "❌ EXEパッケージのインストールに失敗しました: $($App.name) ($errorMessage)" -Level "ERROR"
-			return $false
+			else {
+				$errorMessage = switch ($process.ExitCode) {
+					1 { "一般的なエラー" }
+					2 { "ファイルが見つかりません" }
+					3 { "パスが見つかりません" }
+					5 { "アクセス拒否" }
+					87 { "パラメータエラー" }
+					1223 { "ユーザーによってキャンセルされました" }
+					default { "エラーコード: $($process.ExitCode)" }
+				}
+				Write-Log "❌ EXEパッケージのインストールに失敗しました: $($App.name) ($errorMessage)" -Level "ERROR"
+				$success = $false
+			}
 		}
+
+		return $success
 	}
 	catch {
 		Write-Log "❌ EXEパッケージインストールでエラー: $($App.name) - $($_.Exception.Message)" -Level "ERROR"
