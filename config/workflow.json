@@ -1,4 +1,4 @@
-﻿{
+{
   "workflow": {
     "name": "Windows11AutoSetup",
     "version": "1.0",
@@ -46,9 +46,7 @@
         "timeout": 300,
         "retryCount": 2,
         "rebootRequired": false,
-        "dependsOn": [
-          "bios-password-confirmation"
-        ],
+        "dependsOn": ["bios-password-confirmation"],
         "onError": "stop"
       },
       {
@@ -65,9 +63,7 @@
         "timeout": 120,
         "retryCount": 2,
         "rebootRequired": false,
-        "dependsOn": [
-          "init"
-        ],
+        "dependsOn": ["init"],
         "onError": "continue"
       },
       {
@@ -91,9 +87,7 @@
         "timeout": 120,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "init"
-        ],
+        "dependsOn": ["init"],
         "onError": "stop"
       },
       {
@@ -116,9 +110,7 @@
         "timeout": 120,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "init"
-        ],
+        "dependsOn": ["init"],
         "onError": "stop"
       },
       {
@@ -135,9 +127,7 @@
         "timeout": 120,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "task-scheduler-setup"
-        ],
+        "dependsOn": ["task-scheduler-setup"],
         "onError": "continue"
       },
       {
@@ -158,9 +148,7 @@
         "timeout": 300,
         "retryCount": 2,
         "rebootRequired": true,
-        "dependsOn": [
-          "enable-admin"
-        ],
+        "dependsOn": ["enable-admin"],
         "onError": "stop"
       },
       {
@@ -177,9 +165,7 @@
         "timeout": 600,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "rename-computer"
-        ],
+        "dependsOn": ["rename-computer"],
         "onError": "continue"
       },
       {
@@ -203,9 +189,7 @@
         "timeout": 3600,
         "retryCount": 3,
         "rebootRequired": true,
-        "dependsOn": [
-          "import-registry"
-        ],
+        "dependsOn": ["import-registry"],
         "onError": "retry"
       },
       {
@@ -222,9 +206,7 @@
         "timeout": 600,
         "retryCount": 2,
         "rebootRequired": false,
-        "dependsOn": [
-          "windows-update"
-        ],
+        "dependsOn": ["windows-update"],
         "onError": "retry"
       },
       {
@@ -241,9 +223,7 @@
         "timeout": 1800,
         "retryCount": 2,
         "rebootRequired": false,
-        "dependsOn": [
-          "install-winget"
-        ],
+        "dependsOn": ["install-winget"],
         "onError": "continue"
       },
       {
@@ -260,9 +240,7 @@
         "timeout": 600,
         "retryCount": 2,
         "rebootRequired": false,
-        "dependsOn": [
-          "install-basic-apps"
-        ],
+        "dependsOn": ["install-basic-apps"],
         "onError": "retry"
       },
       {
@@ -282,9 +260,7 @@
         "timeout": 300,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "uninstall-apps"
-        ],
+        "dependsOn": ["uninstall-apps"],
         "onError": "continue"
       },
       {
@@ -307,9 +283,7 @@
         "timeout": 600,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "deploy-desktop-files"
-        ],
+        "dependsOn": ["deploy-desktop-files"],
         "onError": "continue"
       },
       {
@@ -326,9 +300,7 @@
         "timeout": 600,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "setup-bitlocker"
-        ],
+        "dependsOn": ["setup-bitlocker"],
         "onError": "continue"
       },
       {
@@ -349,9 +321,7 @@
         "timeout": 300,
         "retryCount": 1,
         "rebootRequired": false,
-        "dependsOn": [
-          "deploy-desktop-files"
-        ],
+        "dependsOn": ["deploy-desktop-files"],
         "onError": "continue"
       },
       {
@@ -375,9 +345,7 @@
         "timeout": 120,
         "retryCount": 2,
         "rebootRequired": false,
-        "dependsOn": [
-          "task-scheduler-unregister"
-        ],
+        "dependsOn": ["task-scheduler-unregister"],
         "onError": "continue"
       }
     ]
