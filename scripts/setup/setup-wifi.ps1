@@ -27,7 +27,7 @@ Wi-Fi設定プロファイル適用スクリプト
     -ProfileName <name>        適用するプロファイル名を指定
                                XMLファイル内のプロファイル名を指定
 
-    -Force                     既存のプロファイルを強制上書き
+    -Force                     既存のプロファイルを強制上書き、アダプターがなくてもプロファイルを作成
 
     -Connect                   プロファイル適用後に自動接続を試行
 
@@ -62,6 +62,7 @@ Wi-Fi設定プロファイル適用スクリプト
 
 # Windows 11 24H2対応: netshコマンドの文字化け対策
 # https://jpwinsup.github.io/blog/2025/03/11/Networking/TCPIP/NetshEncodingChange24h2/
+$currentEncoding = [System.Console]::OutputEncoding
 [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ログ関数
@@ -121,6 +122,10 @@ function Enable-WiFiAdapter {
 			foreach ($adapter in $enabledAdapters) {
 				Write-Log "  - $($adapter.Name): $($adapter.Status)"
 			}
+			return $true
+		}
+		elseif ($Force) {
+			Write-Log "Wi-Fiアダプターが有効化されていませんが、Forceモードのため続行します" -Level "WARN"
 			return $true
 		}
 		else {
@@ -301,6 +306,7 @@ try {
 		} else {
 			Write-Log "Wi-Fiアダプターの準備に失敗しました" -Level "ERROR"
 			Write-Log "Forceオプションを指定すると、アダプターがなくてもプロファイルを作成できます" -Level "INFO"
+			[System.Console]::OutputEncoding = $currentEncoding
 			exit 1
 		}
 	}
@@ -315,6 +321,7 @@ try {
 
 	if (-not $success) {
 		Write-Log "Wi-Fiプロファイルの適用に失敗しました" -Level "ERROR"
+		[System.Console]::OutputEncoding = $currentEncoding
 		exit 1
 	}
 
@@ -348,5 +355,6 @@ try {
 }
 catch {
 	Write-Log "予期しないエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
+	[System.Console]::OutputEncoding = $currentEncoding
 	exit 1
 }
