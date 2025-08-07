@@ -60,10 +60,49 @@ Wi-Fi設定プロファイル適用スクリプト
 # ヘルパー関数の読み込み
 . (Join-Path (Split-Path $PSScriptRoot -Parent) "Common-WorkflowHelpers.ps1")
 
-# Windows 11 24H2対応: netshコマンドの文字化け対策
-# https://jpwinsup.github.io/blog/2025/03/11/Networking/TCPIP/NetshEncodingChange24h2/
-$currentEncoding = [System.Console]::OutputEncoding
-[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# netshコマンド実行関数（文字化け対策）
+function Invoke-Netsh {
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory)][string[]]
+		$Arguments,
+
+		[Switch]
+		$AsLog    # 指定すると Write-Log で出力
+	)
+
+	# 一時ファイルの作成
+	$outFile = [System.IO.Path]::GetTempFileName()
+
+	try {
+		# netsh を実行して標準出力をファイルへリダイレクト
+		$result = Start-Process -FilePath netsh `
+			-ArgumentList $Arguments `
+			-RedirectStandardOutput $outFile `
+			-NoNewWindow -PassThru -Wait
+		Write-Output $result
+		# デフォルトの文字エンコーディングで読み込み
+		$lines = Get-Content $outFile -Encoding UTF8
+
+		if ($AsLog) {
+			foreach ($line in $lines) {
+				Write-Log $line
+			}
+		}
+		else {
+			# 出力と ExitCode を返すカスタムオブジェクト
+			return [PSCustomObject]@{
+				Output   = $lines
+				ExitCode = $result.ExitCode
+			}
+		}
+	}
+	finally {
+		# 後片付け
+		Remove-Item $outFile -ErrorAction SilentlyContinue
+	}
+}
 
 # ログ関数
 function Write-Log {
@@ -81,15 +120,22 @@ function Enable-WiFiAdapter {
 	try {
 		Write-Log "Wi-Fiアダプターの状態を確認中..."
 
-		# Wi-Fiアダプターを取得
+		# Wi-Fiアダプターを取得（より確実な検出方法）
 		$wifiAdapters = Get-NetAdapter | Where-Object {
-			$_.InterfaceDescription -match "wireless|wi-fi|wlan" -or
-			$_.Name -match "wi-fi|wireless|wlan"
+			$_.InterfaceDescription -match "wireless|wi-fi|wlan|802\.11|WiFi" -or
+			$_.Name -match "wi-fi|wireless|wlan|WiFi" -or
+			$_.InterfaceDescription -match "Intel|Realtek|Qualcomm|Broadcom|MediaTek" -and
+			$_.InterfaceDescription -match "Wireless|Wi-Fi|WiFi"
 		}
 
 		if (-not $wifiAdapters) {
 			Write-Log "Wi-Fiアダプターが見つかりません" -Level "ERROR"
 			return $false
+		}
+
+		Write-Log "検出されたWi-Fiアダプター:"
+		foreach ($adapter in $wifiAdapters) {
+			Write-Log "  - $($adapter.Name): $($adapter.Status) ($($adapter.InterfaceDescription))"
 		}
 
 		# 無効なアダプターがあれば有効化
@@ -111,9 +157,12 @@ function Enable-WiFiAdapter {
 			Start-Sleep -Seconds 3
 		}
 
-		# 有効なアダプターの確認
+		# 有効なアダプターの確認（より詳細な確認）
 		$enabledAdapters = Get-NetAdapter | Where-Object {
-			($_.InterfaceDescription -match "wireless|wi-fi|wlan" -or $_.Name -match "wi-fi|wireless|wlan") -and
+			($_.InterfaceDescription -match "wireless|wi-fi|wlan|802\.11|WiFi" -or
+			$_.Name -match "wi-fi|wireless|wlan|WiFi" -or
+			$_.InterfaceDescription -match "Intel|Realtek|Qualcomm|Broadcom|MediaTek" -and
+			$_.InterfaceDescription -match "Wireless|Wi-Fi|WiFi") -and
 			($_.Status -eq "Up" -or $_.Status -eq "Disconnected")
 		}
 
@@ -180,17 +229,18 @@ function Add-WiFiProfile {
 		if ($xmlProfileName) {
 			Write-Log "プロファイル名: $xmlProfileName"
 
-			# 既存プロファイルの確認
-			$existingProfile = netsh wlan show profiles | Select-String $xmlProfileName
+			# 既存プロファイルの確認（文字化け対策版）
+			$existingProfilesResult = Invoke-Netsh -Arguments 'wlan', 'show', 'profiles'
+			$existingProfile = $existingProfilesResult.Output | Select-String $xmlProfileName
 			if ($existingProfile -and -not $ForceOverwrite) {
 				Write-Log "プロファイル '$xmlProfileName' は既に存在します。-Force オプションで上書きできます" -Level "WARN"
 				return $false
 			}
 		}
 
-		# netshコマンドでプロファイルを追加
-		$result = & netsh wlan add profile filename="$ProfilePath" 2>&1
-		$exitCode = $LASTEXITCODE
+		# netshコマンドでプロファイルを追加（文字化け対策版）
+		$result = Invoke-Netsh -Arguments 'wlan', 'add', 'profile', "filename=`"$ProfilePath`""
+		$exitCode = $result.ExitCode
 
 		if ($exitCode -eq 0) {
 			Write-Log "✅ Wi-Fiプロファイルが正常に適用されました"
@@ -212,7 +262,7 @@ function Add-WiFiProfile {
 		else {
 			if ($ForceMode) {
 				Write-Log "Wi-Fiプロファイルの適用に失敗しましたが、Forceモードのため続行します" -Level "WARN"
-				Write-Log "netsh エラー出力: $result" -Level "WARN"
+				Write-Log "netsh エラー出力: $($result.Output)" -Level "WARN"
 
 				# Forceモードの場合は、プロファイルが作成されていなくても成功として扱う
 				Write-Log "Forceモード: プロファイルの作成をスキップしました"
@@ -230,7 +280,7 @@ function Add-WiFiProfile {
 			}
 			else {
 				Write-Log "Wi-Fiプロファイルの適用に失敗しました" -Level "ERROR"
-				Write-Log "netsh エラー出力: $result" -Level "ERROR"
+				Write-Log "netsh エラー出力: $($result.Output)" -Level "ERROR"
 				return $false
 			}
 		}
@@ -248,22 +298,22 @@ function Connect-WiFiNetwork {
 	try {
 		Write-Log "Wi-Fiネットワークに接続中: $ProfileName"
 
-		$result = & netsh wlan connect name="$ProfileName" 2>&1
-		$exitCode = $LASTEXITCODE
+		$result = Invoke-Netsh -Arguments 'wlan', 'connect', "name=`"$ProfileName`""
+		$exitCode = $result.ExitCode
 
 		if ($exitCode -eq 0) {
 			Write-Log "✅ Wi-Fiネットワークに接続しました: $ProfileName"
 
 			# 接続状態の確認（少し待ってから）
 			Start-Sleep -Seconds 5
-			$connectionStatus = & netsh wlan show interfaces 2>&1
-			if ($connectionStatus -match "接続|Connected") {
+			$connectionStatusResult = Invoke-Netsh -Arguments 'wlan', 'show', 'interfaces'
+			if ($connectionStatusResult.Output -match "接続|Connected") {
 				Write-Log "Wi-Fi接続が確立されました"
 			}
 			return $true
 		}
 		else {
-			Write-Log "Wi-Fiネットワークへの接続に失敗しました: $result" -Level "WARN"
+			Write-Log "Wi-Fiネットワークへの接続に失敗しました: $($result.Output)" -Level "WARN"
 			return $false
 		}
 	}
@@ -277,12 +327,10 @@ function Connect-WiFiNetwork {
 function Show-WiFiProfiles {
 	try {
 		Write-Log "現在のWi-Fiプロファイル一覧:"
-		$profiles = & netsh wlan show profiles 2>&1
-		Write-Host $profiles -ForegroundColor Cyan
+		Invoke-Netsh -Arguments 'wlan', 'show', 'profiles' -AsLog
 
 		Write-Log "Wi-Fiアダプターの状態:"
-		$interfaces = & netsh wlan show interfaces 2>&1
-		Write-Host $interfaces -ForegroundColor Yellow
+		Invoke-Netsh -Arguments 'wlan', 'show', 'interfaces' -AsLog
 	}
 	catch {
 		Write-Log "Wi-Fiプロファイル一覧の取得に失敗しました: $($_.Exception.Message)" -Level "ERROR"
@@ -308,7 +356,6 @@ try {
 		else {
 			Write-Log "Wi-Fiアダプターの準備に失敗しました" -Level "ERROR"
 			Write-Log "Forceオプションを指定すると、アダプターがなくてもプロファイルを作成できます" -Level "INFO"
-			[System.Console]::OutputEncoding = $currentEncoding
 			exit 1
 		}
 	}
@@ -323,7 +370,6 @@ try {
 
 	if (-not $success) {
 		Write-Log "Wi-Fiプロファイルの適用に失敗しました" -Level "ERROR"
-		[System.Console]::OutputEncoding = $currentEncoding
 		exit 1
 	}
 
@@ -359,6 +405,5 @@ try {
 }
 catch {
 	Write-Log "予期しないエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
-	[System.Console]::OutputEncoding = $currentEncoding
 	exit 1
 }
