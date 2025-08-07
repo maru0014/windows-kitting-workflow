@@ -113,8 +113,8 @@ function Enable-WiFiAdapter {
 
 		# 有効なアダプターの確認
 		$enabledAdapters = Get-NetAdapter | Where-Object {
-            ($_.InterfaceDescription -match "wireless|wi-fi|wlan" -or $_.Name -match "wi-fi|wireless|wlan") -and
-			$_.Status -eq "Up"
+			($_.InterfaceDescription -match "wireless|wi-fi|wlan" -or $_.Name -match "wi-fi|wireless|wlan") -and
+			($_.Status -eq "Up" -or $_.Status -eq "Disconnected")
 		}
 
 		if ($enabledAdapters) {
@@ -227,7 +227,8 @@ function Add-WiFiProfile {
 				Set-Content -Path (Join-Path $statusDir "setup-wifi.completed") -Value $timestamp -Encoding UTF8
 
 				return $true
-			} else {
+			}
+			else {
 				Write-Log "Wi-Fiプロファイルの適用に失敗しました" -Level "ERROR"
 				Write-Log "netsh エラー出力: $result" -Level "ERROR"
 				return $false
@@ -303,7 +304,8 @@ try {
 	if (-not $wifiAdapterAvailable) {
 		if ($Force) {
 			Write-Log "Forceオプションが指定されているため、Wi-Fiアダプターがなくてもプロファイルを作成します" -Level "WARN"
-		} else {
+		}
+		else {
 			Write-Log "Wi-Fiアダプターの準備に失敗しました" -Level "ERROR"
 			Write-Log "Forceオプションを指定すると、アダプターがなくてもプロファイルを作成できます" -Level "INFO"
 			[System.Console]::OutputEncoding = $currentEncoding
@@ -329,7 +331,8 @@ try {
 	if ($Connect) {
 		if ($Force -and -not $wifiAdapterAvailable) {
 			Write-Log "ForceモードでWi-Fiアダプターが利用できないため、自動接続をスキップします" -Level "WARN"
-		} else {
+		}
+		else {
 			$xmlProfileName = Get-ProfileNameFromXML -XmlPath $ProfilePath
 			if ($xmlProfileName) {
 				Connect-WiFiNetwork -ProfileName $xmlProfileName
@@ -346,7 +349,8 @@ try {
 	# 最終状態の表示
 	if ($Force -and -not $wifiAdapterAvailable) {
 		Write-Log "ForceモードでWi-Fiアダプターが利用できないため、状態表示をスキップします" -Level "WARN"
-	} else {
+	}
+ else {
 		Write-Log "現在のWi-Fi状態:"
 		Show-WiFiProfiles
 	}
