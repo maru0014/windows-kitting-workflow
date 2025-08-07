@@ -346,7 +346,7 @@ function Install-MsiPackage {
 		$process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -PassThru -NoNewWindow
 
 		# プロセスが開始されるまで少し待機
-		Start-Sleep -Milliseconds 500
+		Start-Sleep -Milliseconds 1000
 
 		if (-not $process -or $process.HasExited) {
 			Write-Log "❌ プロセスの開始に失敗しました" -Level "ERROR"
@@ -363,7 +363,7 @@ function Install-MsiPackage {
 				$timedOut = $true
 				break
 			}
-			Start-Sleep -Milliseconds 200
+			Start-Sleep -Milliseconds 500
 		}
 
 		$duration = ((Get-Date) - $startTime).TotalSeconds
@@ -468,7 +468,7 @@ function Install-ExePackage {
 		$process = Start-Process -FilePath $installerPath -ArgumentList $exeArgs -PassThru -NoNewWindow
 
 		# プロセスが開始されるまで少し待機
-		Start-Sleep -Milliseconds 500
+		Start-Sleep -Milliseconds 1000
 
 		if (-not $process -or $process.HasExited) {
 			Write-Log "❌ プロセスの開始に失敗しました" -Level "ERROR"
@@ -485,7 +485,7 @@ function Install-ExePackage {
 				$timedOut = $true
 				break
 			}
-			Start-Sleep -Milliseconds 200
+			Start-Sleep -Milliseconds 500
 		}
 
 		$duration = ((Get-Date) - $startTime).TotalSeconds
