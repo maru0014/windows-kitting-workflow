@@ -107,6 +107,16 @@ function Save-WorkflowConfig {
 # Save-As機能の共通ヘルパー関数
 function Invoke-SaveAsDialog {
 	if ($script:Config) {
+		$result = Test-WorkflowStepDependencies
+		if (-not $result.Valid) {
+			[System.Windows.Forms.MessageBox]::Show(
+				($result.Errors -join "`n"),
+				"依存関係エラー",
+				[System.Windows.Forms.MessageBoxButtons]::OK,
+				[System.Windows.Forms.MessageBoxIcon]::Error
+			)
+			return
+		}
 		$saveDialog = New-Object System.Windows.Forms.SaveFileDialog
 		$saveDialog.Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*"
 		$saveDialog.InitialDirectory = Split-Path $script:ConfigFilePath -Parent
@@ -174,6 +184,16 @@ function Create-MainForm {
 	$saveMenuItem.ShortcutKeys = "Control, S"
 	$saveMenuItem.Add_Click({
 			if ($script:Config) {
+				$result = Test-WorkflowStepDependencies
+				if (-not $result.Valid) {
+					[System.Windows.Forms.MessageBox]::Show(
+						($result.Errors -join "`n"),
+						"依存関係エラー",
+						[System.Windows.Forms.MessageBoxButtons]::OK,
+						[System.Windows.Forms.MessageBoxIcon]::Error
+					)
+					return
+				}
 				Save-WorkflowConfig -Config $script:Config -Path $script:ConfigFilePath
 			}
 		})
@@ -355,6 +375,16 @@ function Create-BasicSettingsTab {
 	$btnSaveBasic.Size = New-Object System.Drawing.Size(80, 30)
 	$btnSaveBasic.Add_Click({
 			if ($script:Config) {
+				$result = Test-WorkflowStepDependencies
+				if (-not $result.Valid) {
+					[System.Windows.Forms.MessageBox]::Show(
+						($result.Errors -join "`n"),
+						"依存関係エラー",
+						[System.Windows.Forms.MessageBoxButtons]::OK,
+						[System.Windows.Forms.MessageBoxIcon]::Error
+					)
+					return
+				}
 				Save-WorkflowConfig -Config $script:Config -Path $script:ConfigFilePath
 			}
 		})
@@ -448,6 +478,16 @@ function Create-StepsTab {
 	$btnSave.Size = New-Object System.Drawing.Size(60, 25)
 	$btnSave.Add_Click({
 			if ($script:Config) {
+				$result = Test-WorkflowStepDependencies
+				if (-not $result.Valid) {
+					[System.Windows.Forms.MessageBox]::Show(
+						($result.Errors -join "`n"),
+						"依存関係エラー",
+						[System.Windows.Forms.MessageBoxButtons]::OK,
+						[System.Windows.Forms.MessageBoxIcon]::Error
+					)
+					return
+				}
 				Save-WorkflowConfig -Config $script:Config -Path $script:ConfigFilePath
 			}
 		})
@@ -1188,6 +1228,13 @@ function Remove-Step {
 			# 詳細パネルをクリア
 			Clear-StepDetails
 
+			# 他のStepのdependsOnから削除対象IDを除去
+			foreach ($step in $script:Config.workflow.steps) {
+				if ($step.dependsOn -and $step.dependsOn -contains $selectedStepId) {
+					$step.dependsOn = $step.dependsOn | Where-Object { $_ -ne $selectedStepId }
+				}
+			}
+
 			[System.Windows.Forms.MessageBox]::Show(
 				"ステップ '$selectedStepName' を削除しました。",
 				"削除完了",
@@ -1213,6 +1260,30 @@ function Clear-StepDetails {
 
 	# 依存関係リストもクリア
 	$script:chkDependsOn.Items.Clear()
+}
+
+# 依存関係チェック関数の追加
+function Test-WorkflowStepDependencies {
+    if (-not $script:Config -or -not $script:Config.workflow -or -not $script:Config.workflow.steps) {
+        return @{ Valid = $true }
+    }
+    $steps = $script:Config.workflow.steps
+    $allIds = $steps | ForEach-Object { $_.id }
+    $errors = @()
+    foreach ($step in $steps) {
+        if ($step.dependsOn) {
+            foreach ($depId in $step.dependsOn) {
+                if ($allIds -notcontains $depId) {
+                    $errors += "ステップ '$($step.name)' (ID: $($step.id)) の依存先 '$depId' が存在しません。"
+                }
+            }
+        }
+    }
+    if ($errors.Count -gt 0) {
+        return @{ Valid = $false; Errors = $errors }
+    } else {
+        return @{ Valid = $true }
+    }
 }
 
 # メイン処理
