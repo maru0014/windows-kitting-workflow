@@ -340,7 +340,7 @@ function Install-MsiPackage {
 
 		# タイムアウト設定の確認
 		$timeout = if ($App.timeout) { $App.timeout } else { 300 } # デフォルト5分
-		Write-Log "⏱️  タイムアウト設定: $timeout秒"
+		Write-Log "⏱️  タイムアウト設定: $($timeout)秒"
 
 		$startTime = Get-Date
 		$process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -PassThru -NoNewWindow
@@ -462,7 +462,7 @@ function Install-ExePackage {
 
 		# タイムアウト設定の確認
 		$timeout = if ($App.timeout) { $App.timeout } else { 300 } # デフォルト5分
-		Write-Log "⏱️  タイムアウト設定: $timeout秒"
+		Write-Log "⏱️  タイムアウト設定: $($timeout)秒"
 
 		$startTime = Get-Date
 		$process = Start-Process -FilePath $installerPath -ArgumentList $exeArgs -PassThru -NoNewWindow
