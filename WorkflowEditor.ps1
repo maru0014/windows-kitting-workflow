@@ -408,8 +408,8 @@ function Create-StepsTab {
 	$script:splitContainer.Orientation = "Horizontal"
 	$script:splitContainer.FixedPanel = "None"  # 比率ベースにする
 	$script:splitContainer.IsSplitterFixed = $false
-	$script:splitContainer.Panel1MinSize = 100
-	$script:splitContainer.Panel2MinSize = 100
+	$script:splitContainer.Panel1MinSize = 150
+	$script:splitContainer.Panel2MinSize = 150
 	# SplitterDistanceは後で設定
 	$TabPage.Controls.Add($script:splitContainer)
 	# 上部パネル：ステップ一覧
