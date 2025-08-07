@@ -140,7 +140,9 @@
       "enabled": false,
       "installMethod": "msi",
       "installerPath": "downloads\\CustomApp.msi",
-      "args": ["/quiet", "/norestart"]
+      "args": ["/quiet", "/norestart"],
+      "timeout": 300,
+      "checkPath": "C:\\Program Files\\CustomApp\\app.exe"
     },
     {
       "id": "another-custom-app",
@@ -151,7 +153,9 @@
       "enabled": false,
       "installMethod": "exe",
       "installerPath": "downloads\\AnotherApp.exe",
-      "args": ["/S", "/v/qn"]
+      "args": ["/S", "/v/qn"],
+      "timeout": 180,
+      "checkPath": "C:\\Program Files (x86)\\AnotherApp\\AnotherApp.exe"
     }
   ]
 }
