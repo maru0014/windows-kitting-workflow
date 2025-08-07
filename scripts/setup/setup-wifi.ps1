@@ -81,13 +81,15 @@ function Invoke-Netsh {
 			-ArgumentList $Arguments `
 			-RedirectStandardOutput $outFile `
 			-NoNewWindow -PassThru -Wait
-		Write-Output $result
+
 		# デフォルトの文字エンコーディングで読み込み
 		$lines = Get-Content $outFile -Encoding UTF8
 
 		if ($AsLog) {
 			foreach ($line in $lines) {
-				Write-Log $line
+				if ($line) {
+					Write-Log $line
+				}
 			}
 		}
 		else {
@@ -397,11 +399,11 @@ try {
 		Write-Log "ForceモードでWi-Fiアダプターが利用できないため、状態表示をスキップします" -Level "WARN"
 	}
  else {
-		Write-Log "現在のWi-Fi状態:"
 		Show-WiFiProfiles
 	}
 
 	Write-Log "=== Wi-Fi設定プロファイル適用完了 ==="
+	exit 0
 }
 catch {
 	Write-Log "予期しないエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
