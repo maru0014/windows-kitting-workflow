@@ -708,7 +708,7 @@ function Start-MainWorkflow {
 		# 初回起動時のみ開始通知を送信
 		if ($isFirstRun) {
 			$workflowSteps = Get-WorkflowStepsMessage
-			Send-Notification -EventType "onWorkflowStart" -Variables @{
+			$null = Send-Notification -EventType "onWorkflowStart" -Variables @{
 				workflowSteps = $workflowSteps
 			}
 			Start-Sleep -Seconds 5
@@ -774,7 +774,7 @@ Status: Initial workflow start notification sent
 		}
 		# 完了通知（総実行時間を正確に計算）
 		$durations = Get-WorkflowDurations
-		Send-Notification -EventType "onWorkflowComplete" -Variables @{
+		$null = Send-Notification -EventType "onWorkflowComplete" -Variables @{
 			totalDuration   = $durations.Total.ToString()
 			sessionDuration = $durations.Session.ToString()
 			completedSteps  = $completedSteps.Count
@@ -836,7 +836,7 @@ Status: Initial workflow start notification sent
 		$errorMessage = $_.Exception.Message
 		Write-Log "ワークフローでエラーが発生しました: $errorMessage" -Level "ERROR"
 
-		Send-Notification -EventType "onWorkflowError" -Variables @{
+		$null = Send-Notification -EventType "onWorkflowError" -Variables @{
 			errorMessage = $errorMessage
 			logPath      = $Global:LogPath
 		}
@@ -891,7 +891,7 @@ try {
 		Write-Host "  すべてのセットアップが完了しました。" -ForegroundColor Green
 		Write-Host "  ログファイルが自動的に開かれました。" -ForegroundColor Green
 		# 成功時の通知送信
-		Send-Notification -EventType "onWorkflowSuccess" -Variables @{
+		$null = Send-Notification -EventType "onWorkflowSuccess" -Variables @{
 			totalDuration   = $durations.Total.ToString()
 			sessionDuration = $durations.Session.ToString()
 			logPath         = $Global:LogPath
@@ -904,7 +904,7 @@ try {
 		Write-Host "  詳細はログファイルを確認してください。" -ForegroundColor Yellow
 
 		# 失敗時の通知送信
-		Send-Notification -EventType "onWorkflowFailure" -Variables @{
+		$null = Send-Notification -EventType "onWorkflowFailure" -Variables @{
 			totalDuration   = $durations.Total.ToString()
 			sessionDuration = $durations.Session.ToString()
 			logPath         = $Global:LogPath
@@ -916,7 +916,7 @@ try {
 		Write-Host "  詳細はログファイルを確認してください。" -ForegroundColor Yellow
 
 		# 失敗時の通知送信
-		Send-Notification -EventType "onWorkflowFailure" -Variables @{
+		$null = Send-Notification -EventType "onWorkflowFailure" -Variables @{
 			totalDuration   = $durations.Total.ToString()
 			sessionDuration = $durations.Session.ToString()
 			logPath         = $Global:LogPath
@@ -959,7 +959,7 @@ catch {
 		$errorSessionDuration = "計測不可"
 	}
 
-	Send-Notification -EventType "onWorkflowCriticalError" -Variables @{
+	$null = Send-Notification -EventType "onWorkflowCriticalError" -Variables @{
 		errorMessage    = $_.Exception.Message
 		logPath         = $Global:LogPath
 		errorLogPath    = $Global:ErrorLogPath
