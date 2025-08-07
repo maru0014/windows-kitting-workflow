@@ -120,7 +120,6 @@ Windows Kitting Workflow - Windows 11自動セットアップシステム
 				-Action $action `
 				-Trigger @($triggerLogon, $triggerStartup) `
 				-Settings $settings `
-				-Principal $principal `
 				-Description $description `
 				-User $Username `
 				-Password $Password `

@@ -105,6 +105,8 @@
         "runAsAdmin": true,
         "parameters": {
           "Action": "Register",
+          "Username": "",
+          "Password": "",
           "Force": true
         },
         "completionCheck": {
