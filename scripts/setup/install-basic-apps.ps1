@@ -343,7 +343,7 @@ function Install-MsiPackage {
 		Write-Log "⏱️  タイムアウト設定: $($timeout)秒"
 
 		$startTime = Get-Date
-		$process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -PassThru -NoNewWindow
+		$process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -PassThru
 
 		# プロセスが開始されるまで少し待機
 		Start-Sleep -Milliseconds 1000
@@ -465,7 +465,7 @@ function Install-ExePackage {
 		Write-Log "⏱️  タイムアウト設定: $($timeout)秒"
 
 		$startTime = Get-Date
-		$process = Start-Process -FilePath $installerPath -ArgumentList $exeArgs -PassThru -NoNewWindow
+		$process = Start-Process -FilePath $installerPath -ArgumentList $exeArgs -PassThru
 
 		# プロセスが開始されるまで少し待機
 		Start-Sleep -Milliseconds 1000
