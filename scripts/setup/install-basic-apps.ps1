@@ -345,18 +345,25 @@ function Install-MsiPackage {
 		$startTime = Get-Date
 		$process = Start-Process -FilePath "msiexec.exe" -ArgumentList $msiArgs -PassThru -NoNewWindow
 
-		# タイムアウト処理
+		# プロセスが開始されるまで少し待機
+		Start-Sleep -Milliseconds 500
+
+		if (-not $process -or $process.HasExited) {
+			Write-Log "❌ プロセスの開始に失敗しました" -Level "ERROR"
+			return $false
+		}
+
+		# タイムアウト処理（ループ監視）
 		$timedOut = $false
-		try {
-			if (-not $process.WaitForExit($timeout * 1000)) {
+		while (-not $process.HasExited) {
+			$elapsed = ((Get-Date) - $startTime).TotalSeconds
+			if ($elapsed -gt $timeout) {
 				Write-Log "⏰ タイムアウトしました ($timeout秒)。プロセスを終了します..." -Level "WARN"
 				$process.Kill()
 				$timedOut = $true
+				break
 			}
-		}
-		catch {
-			Write-Log "⚠️  プロセス待機中にエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
-			$timedOut = $true
+			Start-Sleep -Milliseconds 200
 		}
 
 		$duration = ((Get-Date) - $startTime).TotalSeconds
@@ -460,18 +467,25 @@ function Install-ExePackage {
 		$startTime = Get-Date
 		$process = Start-Process -FilePath $installerPath -ArgumentList $exeArgs -PassThru -NoNewWindow
 
-		# タイムアウト処理
+		# プロセスが開始されるまで少し待機
+		Start-Sleep -Milliseconds 500
+
+		if (-not $process -or $process.HasExited) {
+			Write-Log "❌ プロセスの開始に失敗しました" -Level "ERROR"
+			return $false
+		}
+
+		# タイムアウト処理（ループ監視）
 		$timedOut = $false
-		try {
-			if (-not $process.WaitForExit($timeout * 1000)) {
+		while (-not $process.HasExited) {
+			$elapsed = ((Get-Date) - $startTime).TotalSeconds
+			if ($elapsed -gt $timeout) {
 				Write-Log "⏰ タイムアウトしました ($timeout秒)。プロセスを終了します..." -Level "WARN"
 				$process.Kill()
 				$timedOut = $true
+				break
 			}
-		}
-		catch {
-			Write-Log "⚠️  プロセス待機中にエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
-			$timedOut = $true
+			Start-Sleep -Milliseconds 200
 		}
 
 		$duration = ((Get-Date) - $startTime).TotalSeconds
