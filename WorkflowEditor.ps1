@@ -427,14 +427,14 @@ function Create-StepsTab {
 	$script:splitContainer.Panel2.Controls.Add($grpStepDetails)
 	# ボタンパネル
 	$buttonPanel = New-Object System.Windows.Forms.Panel
-	$buttonPanel.Height = 40
+	$buttonPanel.Height = 35
 	$buttonPanel.Dock = "Top"
 	$grpSteps.Controls.Add($buttonPanel)
 
 	# 新規追加ボタン
 	$btnAddStep = New-Object System.Windows.Forms.Button
 	$btnAddStep.Text = "新規追加"
-	$btnAddStep.Location = New-Object System.Drawing.Point(10, 8)
+	$btnAddStep.Location = New-Object System.Drawing.Point(10, 5)
 	$btnAddStep.Size = New-Object System.Drawing.Size(80, 25)
 	$btnAddStep.Add_Click({
 		Add-NewStep
@@ -444,7 +444,7 @@ function Create-StepsTab {
 	# 削除ボタン
 	$btnDeleteStep = New-Object System.Windows.Forms.Button
 	$btnDeleteStep.Text = "削除"
-	$btnDeleteStep.Location = New-Object System.Drawing.Point(100, 8)
+	$btnDeleteStep.Location = New-Object System.Drawing.Point(100, 5)
 	$btnDeleteStep.Size = New-Object System.Drawing.Size(60, 25)
 	$btnDeleteStep.Add_Click({
 		Remove-Step
@@ -454,7 +454,7 @@ function Create-StepsTab {
 	# 上へ移動ボタン
 	$btnMoveUp = New-Object System.Windows.Forms.Button
 	$btnMoveUp.Text = "上へ移動"
-	$btnMoveUp.Location = New-Object System.Drawing.Point(170, 8)
+	$btnMoveUp.Location = New-Object System.Drawing.Point(170, 5)
 	$btnMoveUp.Size = New-Object System.Drawing.Size(80, 25)
 	$btnMoveUp.Add_Click({
 			Move-StepUp
@@ -464,7 +464,7 @@ function Create-StepsTab {
 	# 下へ移動ボタン
 	$btnMoveDown = New-Object System.Windows.Forms.Button
 	$btnMoveDown.Text = "下へ移動"
-	$btnMoveDown.Location = New-Object System.Drawing.Point(260, 8)
+	$btnMoveDown.Location = New-Object System.Drawing.Point(260, 5)
 	$btnMoveDown.Size = New-Object System.Drawing.Size(80, 25)
 	$btnMoveDown.Add_Click({
 			Move-StepDown
@@ -474,7 +474,7 @@ function Create-StepsTab {
 	# 保存ボタン
 	$btnSave = New-Object System.Windows.Forms.Button
 	$btnSave.Text = "保存"
-	$btnSave.Location = New-Object System.Drawing.Point(360, 8)
+	$btnSave.Location = New-Object System.Drawing.Point(360, 5)
 	$btnSave.Size = New-Object System.Drawing.Size(60, 25)
 	$btnSave.Add_Click({
 			if ($script:Config) {
@@ -496,7 +496,7 @@ function Create-StepsTab {
 	# 名前を付けて保存ボタン
 	$btnSaveAs = New-Object System.Windows.Forms.Button
 	$btnSaveAs.Text = "名前を付けて保存"
-	$btnSaveAs.Location = New-Object System.Drawing.Point(430, 8)
+	$btnSaveAs.Location = New-Object System.Drawing.Point(430, 5)
 	$btnSaveAs.Size = New-Object System.Drawing.Size(120, 25)
 	$btnSaveAs.Add_Click({
 			Invoke-SaveAsDialog
@@ -563,7 +563,23 @@ function Create-StepDetailsPanel {
 	$panel = $script:pnlStepDetails
 	$panel.Controls.Clear()
 
-	$y = 20
+	$y = 0
+
+	# ステップ設定を適用ボタンをステップIDの上に配置
+	$btnApplyStep = New-Object System.Windows.Forms.Button
+	$btnApplyStep.Text = "ステップ設定を適用"
+	$btnApplyStep.Location = New-Object System.Drawing.Point(15, $y)
+	$btnApplyStep.Size = New-Object System.Drawing.Size(140, 25)
+	$btnApplyStep.Add_Click({
+		Apply-StepSettings
+		# ステップ詳細ペイン全体を更新
+		if ($script:txtStepId.Text) {
+			Show-StepDetails -StepId $script:txtStepId.Text
+		}
+	})
+	$panel.Controls.Add($btnApplyStep) | Out-Null
+
+	$y += 40
 
 	# ステップID（読み取り専用）
 	$lblStepId = New-Object System.Windows.Forms.Label
@@ -702,7 +718,7 @@ function Create-StepDetailsPanel {
 
 	# 依存関係設定グループボックス
 	$grpDependencies = New-Object System.Windows.Forms.GroupBox
-	$grpDependencies.Text = "依存関係設定 (依存するステップを選択)"
+	$grpDependencies.Text = "依存関係設定 (事前に完了している必要があるステップを選択)"
 	$grpDependencies.Location = New-Object System.Drawing.Point(20, $y)
 	$grpDependencies.Size = New-Object System.Drawing.Size(600, 150)
 	$panel.Controls.Add($grpDependencies)
@@ -716,14 +732,86 @@ function Create-StepDetailsPanel {
 
 	$y += 170
 
-	# ステップ設定を適用ボタン
-	$btnApplyStep = New-Object System.Windows.Forms.Button
-	$btnApplyStep.Text = "ステップ設定を適用"
-	$btnApplyStep.Location = New-Object System.Drawing.Point(20, $y)
-	$btnApplyStep.Size = New-Object System.Drawing.Size(150, 30)
-	$btnApplyStep.Add_Click({
-			Apply-StepSettings		})
-	$panel.Controls.Add($btnApplyStep) | Out-Null
+	# ボタンパネル（JSONエディターの上部に配置）
+	$buttonPanel = New-Object System.Windows.Forms.Panel
+	$buttonPanel.Location = New-Object System.Drawing.Point(750, 0)
+	$buttonPanel.Size = New-Object System.Drawing.Size(400, 30)
+	$panel.Controls.Add($buttonPanel)
+
+	# JSON適用ボタン
+	$btnApplyJson = New-Object System.Windows.Forms.Button
+	$btnApplyJson.Text = "JSONを適用"
+	$btnApplyJson.Location = New-Object System.Drawing.Point(0, 5)
+	$btnApplyJson.Size = New-Object System.Drawing.Size(100, 25)
+	$btnApplyJson.Add_Click({
+		$jsonText = $script:txtStepJson.Text
+		try {
+			$parsed = $jsonText | ConvertFrom-Json
+			# idが一致するStepを置き換え
+			$stepId = $parsed.id
+			$steps = $script:Config.workflow.steps
+			for ($i = 0; $i -lt $steps.Count; $i++) {
+				if ($steps[$i].id -eq $stepId) {
+					$steps[$i] = $parsed
+					break
+				}
+			}
+			$script:lblJsonError.Text = ""
+			Update-StepsView
+			# ステップ詳細ペイン全体を更新
+			if ($script:txtStepId.Text) {
+				Show-StepDetails -StepId $script:txtStepId.Text
+			}
+			[System.Windows.Forms.MessageBox]::Show(
+				"JSONを適用しました。",
+				"適用完了",
+				[System.Windows.Forms.MessageBoxButtons]::OK,
+				[System.Windows.Forms.MessageBoxIcon]::Information
+			)
+		} catch {
+			$script:lblJsonError.Text = "JSON構文エラー: $($_.Exception.Message)"
+		}
+	})
+	$buttonPanel.Controls.Add($btnApplyJson)
+
+	# JSONリセットボタン
+	$btnResetJson = New-Object System.Windows.Forms.Button
+	$btnResetJson.Text = "元に戻す"
+	$btnResetJson.Location = New-Object System.Drawing.Point(130, 5)
+	$btnResetJson.Size = New-Object System.Drawing.Size(100, 25)
+	$btnResetJson.Add_Click({
+		# 現在のStepの内容でJSONを再表示
+		$stepId = $script:txtStepId.Text
+		$step = $script:Config.workflow.steps | Where-Object { $_.id -eq $stepId }
+		if ($step) {
+			$script:txtStepJson.Text = $step | ConvertTo-Json -Depth 10
+			$script:lblJsonError.Text = ""
+		}
+	})
+	$buttonPanel.Controls.Add($btnResetJson)
+
+	# JSONエディターラベル
+	$lblJsonEditor = New-Object System.Windows.Forms.Label
+	$lblJsonEditor.Text = "ステップJSONを直接編集:"
+	$lblJsonEditor.Location = New-Object System.Drawing.Point(750, 40)
+	$lblJsonEditor.Size = New-Object System.Drawing.Size(200, 23)
+	$panel.Controls.Add($lblJsonEditor)
+
+	# JSONエディターテキストボックス（複数行）
+	$script:txtStepJson = New-Object System.Windows.Forms.TextBox
+	$script:txtStepJson.Location = New-Object System.Drawing.Point(750, 60)
+	$script:txtStepJson.Size = New-Object System.Drawing.Size(400, 300)
+	$script:txtStepJson.Multiline = $true
+	$script:txtStepJson.ScrollBars = "Vertical"
+	$script:txtStepJson.Font = New-Object System.Drawing.Font("Consolas", 10)
+	$panel.Controls.Add($script:txtStepJson)
+
+	# JSONエラー表示用ラベル
+	$script:lblJsonError = New-Object System.Windows.Forms.Label
+	$script:lblJsonError.Location = New-Object System.Drawing.Point(750, 410)
+	$script:lblJsonError.Size = New-Object System.Drawing.Size(400, 30)
+	$script:lblJsonError.ForeColor = [System.Drawing.Color]::Red
+	$panel.Controls.Add($script:lblJsonError)
 }
 
 # ステップを上に移動する関数
@@ -877,6 +965,12 @@ function Show-StepDetails {
 						$script:chkDependsOn.SetItemChecked($i, $true)
 					}
 				}
+			}
+
+			# JSONエディター欄に現在のStepのJSONを表示
+			if ($script:txtStepJson -and $step) {
+				$script:txtStepJson.Text = $step | ConvertTo-Json -Depth 10
+				$script:lblJsonError.Text = ""
 			}
 		}
 	}
