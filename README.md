@@ -37,12 +37,12 @@ windows-kitting-workflow/
 │   ├── workflow.json            # ワークフロー設定
 │   ├── applications.json        # アプリケーション設定
 │   ├── notifications.json       # 通知設定
-│   ├── autologin.json          # 自動ログイン設定
 │   ├── machine_list.csv         # マシンリスト（オプション）
 │   ├── desktop/                # デスクトップファイル
 │   │   ├── public/             # パブリック用
 │   │   └── user/               # ユーザー用
-│   └── registry/               # レジストリ設定ファイル
+│   ├── registry/               # レジストリ設定ファイル
+│   └── wi-fi.xml               # Wi-Fi設定XML
 ├── scripts/                     # スクリプトファイル
 │   ├── Common-LogFunctions.ps1  # 共通ログ関数
 │   ├── Unblock-AllFiles.ps1    # セキュリティブロック一括解除
@@ -59,8 +59,7 @@ windows-kitting-workflow/
 │   ├── Troubleshooting.md          # トラブルシューティング
 │   ├── Testing-Guide.md            # テスト・診断ガイド
 │   ├── AutoLogin-README.md         # 自動ログイン詳細
-│   ├── Teams-Notifications-Enhancement.md  # Teams通知改善詳細
-│   ├── Teams-Adaptive-Cards-Implementation.md  # Teams実装詳細
+│   ├── Teams-Notification-V2-Guide.md  # Teams通知新スレッド化方式ガイド
 │   └── WorkflowRoot-Improvement-Guide.md  # WorkflowRoot改善詳細
 ├── tests/                      # テスト・診断ツール
 │   ├── README.md               # テストガイド
@@ -236,8 +235,7 @@ powershell -ExecutionPolicy Bypass -File "main.bat"
 
 ### 🔧 技術実装詳細（開発者向け）
 - **[共通通知ライブラリ](docs/Common-Notification-Library.md)**: 通知機能の共通化とアーキテクチャ
-- **[Teams通知機能強化](docs/Teams-Notifications-Enhancement.md)**: Teams通知機能の改善実装詳細
-- **[Teamsアダプティブカード実装](docs/Teams-Adaptive-Cards-Implementation.md)**: アダプティブカード対応実装
+- **[Teams通知新スレッド化方式ガイド](docs/Teams-Notification-V2-Guide.md)**: 改良版フロー/真のスレッド化
 - **[WorkflowRoot改善ガイド](docs/WorkflowRoot-Improvement-Guide.md)**: 共通処理改善の実装詳細
 
 ## ライセンス

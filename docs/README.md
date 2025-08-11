@@ -106,13 +106,6 @@ Wi-Fi自動設定機能の詳細説明
 
 ### � 技術実装詳細（開発者向け）
 
-### �📢 [Teams通知機能強化](Teams-Notifications-Enhancement.md)
-Teams通知機能の改善実装詳細
-- 日本語エンコード対策
-- スレッド機能の実装
-- 設定ファイルの変更方法
-- 実装例とトラブルシューティング
-
 ### 🎨 [Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md)
 Teams通知の新スレッド化方式実装
 - 改良版PowerAutomateフローとの連携
@@ -153,8 +146,7 @@ WorkflowRoot取得処理の改善実装
 1. [共通通知ライブラリ](Common-Notification-Library.md) - 通知機能の共通化アーキテクチャ
 2. [テスト・診断ガイド](Testing-Guide.md) - テストツールの理解
 3. [WorkflowRoot改善ガイド](WorkflowRoot-Improvement-Guide.md) - 共通処理の理解
-4. [Teams通知機能強化](Teams-Notifications-Enhancement.md) - Teams通知の実装
-5. [Teamsアダプティブカード実装](Teams-Adaptive-Cards-Implementation.md) - アダプティブカード詳細
+4. [Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md) - Teams通知の実装
 6. [カスタマイズガイド](Customization-Guide.md) - 高度なカスタマイズ
 7. [トラブルシューティングガイド](Troubleshooting.md) - サポート対応
 
@@ -183,8 +175,7 @@ README.md (メイン)
 │   │   └─ 参照 → Troubleshooting.md
 │   └── AutoLogin-README.md
 └── 技術実装詳細
-    ├── Teams-Notifications-Enhancement.md
-    ├── Teams-Adaptive-Cards-Implementation.md
+    ├── Teams-Notification-V2-Guide.md
     └── WorkflowRoot-Improvement-Guide.md
 ```
 
