@@ -10,12 +10,15 @@
 1. **[メインREADME](../README.md)** - プロジェクト概要とクイックスタート
 2. **[トラブルシューティングガイド](Troubleshooting.md)** - 問題発生時の対処法
 3. **[アプリケーション管理ガイド](Application-Management.md)** - インストールされるアプリの理解
+4. **[Office インストールガイド（ODT 連携）](Office-Installation-Guide.md)** - ODT 構成と実行手順
 
 ### ⚙️ カスタマイズしたい方
 1. **[カスタマイズガイド](Customization-Guide.md)** - 基本的なカスタマイズ方法
 2. **[レジストリ設定ガイド](Registry-Configuration.md)** - システム設定の詳細
 3. **[Windows Updateガイド](Windows-Update-Guide.md)** - アップデート設定の詳細
 4. **[Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md)** - Wi-Fi自動設定
+5. **[スタートアップアプリ無効化ガイド](disable_startup_apps_guide.md)** - 指定名のスタートアップ登録を無効化
+6. **[ローカルユーザー削除ガイド](remove_user_guide.md)** - ローカルユーザーとプロファイルの削除
 
 ### 🔔 通知機能を設定したい方
 1. **[共通通知ライブラリ](Common-Notification-Library.md)** - 通知機能の共通化実装
@@ -43,6 +46,9 @@
 | [カスタマイズガイド](Customization-Guide.md) | 中級者 | ワークフローのカスタマイズ |
 | [Windows Updateガイド](Windows-Update-Guide.md) | 中級者 | Windows Update設定詳細 |
 | [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) | 中級者 | Wi-Fi自動設定機能 |
+| [Office インストールガイド（ODT 連携）](Office-Installation-Guide.md) | 中級者 | ODT 構成・テンプレート置換・実行手順 |
+| [スタートアップアプリ無効化ガイド](disable_startup_apps_guide.md) | 中級者 | 指定名のスタートアップ登録を無効化する手順と動作詳細 |
+| [ローカルユーザー削除ガイド](remove_user_guide.md) | 管理者 | ローカルユーザーとプロファイルの安全な削除手順 |
 
 ### 🔔 通知・連携機能
 | ドキュメント | 対象者 | 内容 |
@@ -70,7 +76,7 @@
 ## 📈 スキルレベル別推奨順序
 
 ### 👶 初心者（Windows管理が初めて）
-1. [メインREADME](../README.md) → 2. [アプリケーション管理ガイド](Application-Management.md) → 3. [トラブルシューティングガイド](Troubleshooting.md)
+1. [メインREADME](../README.md) → 2. [アプリケーション管理ガイド](Application-Management.md) → 3. [トラブルシューティングガイド](Troubleshooting.md) → 4. [Office インストールガイド（ODT 連携）](Office-Installation-Guide.md)
 
 ### 🎓 中級者（基本的なカスタマイズを行いたい）
 1. [カスタマイズガイド](Customization-Guide.md) → 2. [WorkflowEditorガイド](WorkflowEditor-Guide.md) → 3. [Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md) → 4. [Slackスレッドガイド](Slack-Thread-Guide.md)
@@ -110,6 +116,7 @@ graph TD
 - [ ] [アプリケーション管理ガイド](Application-Management.md)でインストールアプリを確認
 - [ ] [トラブルシューティングガイド](Troubleshooting.md)を確認
 - [ ] 必要に応じて[カスタマイズガイド](Customization-Guide.md)を参照
+ - [ ] 必要に応じて[Office インストールガイド（ODT 連携）](Office-Installation-Guide.md)を参照
 
 ### カスタマイズ時
 - [ ] [カスタマイズガイド](Customization-Guide.md)で基本方法を理解
