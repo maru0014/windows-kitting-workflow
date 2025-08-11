@@ -151,13 +151,14 @@ workflow-editor.bat "path\to\workflow.json"
 ```
 ![image](https://github.com/user-attachments/assets/23f9a98f-3f0f-406c-ad1a-10475c7911c4)
 
-![image](https://github.com/user-attachments/assets/22f9c61c-55cc-4583-a1e4-a2883dc6cab0)
+![image](https://github.com/user-attachments/assets/1651b96a-61c8-4ac6-acea-2a00501b5e63)
 
 
 WorkflowEditorでは以下の操作が可能です：
 - ワークフローの基本設定（名前、バージョン、説明など）
 - ステップの詳細設定（スクリプト、タイプ、実行オプション）
 - ステップの実行順序変更（上下移動）
+- ステップのJSONを直接編集
 - 設定の保存・名前を付けて保存
 
 詳細は[WorkflowEditorガイド](docs/WorkflowEditor-Guide.md)を参照してください。
