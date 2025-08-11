@@ -56,5 +56,3 @@
 - 「見つからない」: 対象名称の表記揺れを確認。`-AllUsers` が必要なケースもあります。
 - 「権限不足」: 管理者で PowerShell を起動し直し、`-AllUsers` を再試行。
 - 詳細はログ（`disable-startup-apps.log`）を参照してください。
-
-
