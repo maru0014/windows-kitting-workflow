@@ -182,7 +182,6 @@ if ($Global:NotificationConfig) {
 
 ## 📚 関連ドキュメント
 
-- [Teams通知機能の改善実装](Teams-Notifications-Enhancement.md)
-- [Teamsアダプティブカード対応](Teams-Adaptive-Cards-Implementation.md)
+- [Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md)
 - [Slackスレッドガイド](Slack-Thread-Guide.md)
 - [テストガイド](Testing-Guide.md)
