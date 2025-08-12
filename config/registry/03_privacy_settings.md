@@ -103,6 +103,60 @@
   - `0` (dword:00000000): 非表示
   - `1` (dword:00000001): 表示
 
+### DisablePrivacyExperience
+- **フルパス**: `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\OOBE`
+- **キー名**: `DisablePrivacyExperience`
+- **設定値**: `dword:00000001`
+- **意味**: 初回サインイン時の「プライバシーの設定」(OOBE Privacy Experience) の表示を抑止
+- **選択肢**:
+  - `0` (dword:00000000): 抑止しない（表示する）
+  - `1` (dword:00000001): 抑止する（表示しない）
+
+### DisabledByGroupPolicy
+- **フルパス**: `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo`
+- **キー名**: `DisabledByGroupPolicy`
+- **設定値**: `dword:00000001`
+- **意味**: 広告ID（パーソナライズ広告）の使用をグループポリシーで無効化
+- **選択肢**:
+  - `0` (dword:00000000): 許可（有効）
+  - `1` (dword:00000001): 無効（使用不可）
+
+### DisableTailoredExperiencesWithDiagnosticData
+- **フルパス**: `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\CloudContent`
+- **キー名**: `DisableTailoredExperiencesWithDiagnosticData`
+- **設定値**: `dword:00000001`
+- **意味**: Tailored experiences（診断データを使った提案）を無効化
+- **選択肢**:
+  - `0` (dword:00000000): 許可（有効）
+  - `1` (dword:00000001): 無効
+
+### DisableWindowsSpotlightFeatures
+- **フルパス**: `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\CloudContent`
+- **キー名**: `DisableWindowsSpotlightFeatures`
+- **設定値**: `dword:00000001`
+- **意味**: Windows Spotlight 関連機能を無効化
+- **選択肢**:
+  - `0` (dword:00000000): 許可（有効）
+  - `1` (dword:00000001): 無効
+
+### DisableWindowsConsumerFeatures
+- **フルパス**: `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\CloudContent`
+- **キー名**: `DisableWindowsConsumerFeatures`
+- **設定値**: `dword:00000001`
+- **意味**: Windows のコンシューマ機能（提案アプリや推奨コンテンツ等）を無効化
+- **選択肢**:
+  - `0` (dword:00000000): 許可（有効）
+  - `1` (dword:00000001): 無効
+
+### AllowFindMyDevice
+- **フルパス**: `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\FindMyDevice`
+- **キー名**: `AllowFindMyDevice`
+- **設定値**: `dword:00000000`
+- **意味**: 「デバイスを探す」機能の許可設定
+- **選択肢**:
+  - `0` (dword:00000000): 不許可（無効）
+  - `1` (dword:00000001): 許可（有効）
+
 ## 効果
 - プライバシー保護の強化
 - 不要なアプリの自動インストール防止
