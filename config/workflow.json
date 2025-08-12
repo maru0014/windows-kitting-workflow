@@ -1,4 +1,4 @@
-{
+﻿{
   "workflow": {
     "name": "Windows11AutoSetup",
     "version": "1.0",
@@ -261,6 +261,27 @@
         "retryCount": 1,
         "rebootRequired": false,
         "dependsOn": ["uninstall-apps"],
+        "onError": "continue"
+      },
+      {
+        "id": "apply-taskbar-layout",
+        "name": "タスクバーレイアウト適用",
+        "description": "TaskbarLayoutModification.XML を現在ユーザーに適用し、エクスプローラー等を指定順序でピン留め",
+        "script": "scripts/setup/apply-taskbar-layout.ps1",
+        "type": "powershell",
+        "runAsAdmin": false,
+        "parameters": {
+          "Force": true,
+          "Quiet": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/apply-taskbar-layout.completed"
+        },
+        "timeout": 180,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": ["deploy-desktop-files"],
         "onError": "continue"
       },
       {
