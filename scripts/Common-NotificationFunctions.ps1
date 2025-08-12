@@ -42,7 +42,7 @@ function Import-NotificationConfig {
 # TTS 初期化
 function Initialize-TTSSynthesizer {
 	param(
-		[hashtable]$TtsConfig
+		[PSCustomObject]$TtsConfig
 	)
 
 	try {
