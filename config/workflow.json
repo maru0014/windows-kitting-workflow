@@ -368,6 +368,56 @@
         "rebootRequired": false,
         "dependsOn": ["task-scheduler-unregister"],
         "onError": "continue"
+      },
+      {
+        "id": "copy-logs-to-share",
+        "name": "ログファイル共有コピー",
+        "description": "logs を共有フォルダへコピー（PC名サフィックス付与）",
+        "script": "scripts/setup/copy-path-with-network.ps1",
+        "type": "powershell",
+        "runAsAdmin": false,
+        "parameters": {
+          "SourcePath": "logs",
+          "DestinationPath": "\\\\192.168.x.xxx\\vmshare\\{pcname}",
+          "Username": "xxx",
+          "Password": "xxxxxxxx",
+          "Recurse": true,
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/copy-logs-to-share.completed"
+        },
+        "timeout": 300,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": ["disable-autologin"],
+        "onError": "continue"
+      },
+      {
+        "id": "copy-backup-to-share",
+        "name": "バックアップ共有コピー",
+        "description": "backup を共有フォルダへコピー（PC名サフィックス付与）",
+        "script": "scripts/setup/copy-path-with-network.ps1",
+        "type": "powershell",
+        "runAsAdmin": false,
+        "parameters": {
+          "SourcePath": "backup",
+          "DestinationPath": "\\\\192.168.x.xxx\\vmshare\\{pcname}",
+          "Username": "xxx",
+          "Password": "xxxxxxxx",
+          "Recurse": true,
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/copy-backup-to-share.completed"
+        },
+        "timeout": 300,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": ["copy-logs-to-share"],
+        "onError": "continue"
       }
     ]
   }
