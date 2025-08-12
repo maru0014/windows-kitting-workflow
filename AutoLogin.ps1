@@ -23,7 +23,7 @@ param(
 # 自動ログイン設定のデフォルト値を取得
 function Get-AutoLoginDefaults {
 	return @{
-		autoLogonCount = 999
+		autoLogonCount      = 999
 		forcePasswordPrompt = $false
 	}
 }
@@ -76,11 +76,11 @@ function Set-AutoLogin {
 	try {
 		Write-Log "自動ログイン設定を開始します"
 
-		# パラメータが指定されていない場合、現在のユーザー情報を使用または対話入力
-		if (-not $Username -or -not $Password) {
+		$passwordSpecified = $PSBoundParameters.ContainsKey('Password')
+
+		if (-not $Username -or -not $passwordSpecified) {
 			$userInfo = Get-CurrentUserInfo
 
-			# まだ設定されていない場合は現在のユーザー情報を使用
 			if (-not $Username) {
 				$Username = $userInfo.Username
 				Write-Log "現在のユーザー名を使用します: $Username"
@@ -91,11 +91,9 @@ function Set-AutoLogin {
 				Write-Log "現在のドメインを使用します: $Domain"
 			}
 
-			# パスワードがまだ設定されていない場合は入力を求める
-			if (-not $Password) {
+			if (-not $passwordSpecified) {
 				Write-Log "パスワードが指定されていないため、対話入力で設定します"
 
-				# パスワードの入力を求める（2回入力による確認）
 				do {
 					$securePassword1 = Read-Host "パスワードを入力してください ($Username)" -AsSecureString
 					$securePassword2 = Read-Host "確認のため、パスワードを再度入力してください" -AsSecureString
@@ -110,18 +108,20 @@ function Set-AutoLogin {
 					}
 					else {
 						Write-Log "パスワードが一致しません。再度入力してください。" -Level "WARN"
-						# セキュリティのため変数をクリア
 						$password1 = $null
 						$password2 = $null
 					}
 				} while ($true)
 
-				# セキュリティのため一時変数をクリア
 				$password1 = $null
 				$password2 = $null
 				$securePassword1 = $null
 				$securePassword2 = $null
 			}
+		}
+
+		if ($passwordSpecified -and $Password -eq "") {
+			Write-Log "パスワードが空白として指定されました。パスワードなしで設定します" -Level "WARN"
 		}
 
 		Write-Log "ユーザー: $Domain\$Username"
@@ -329,15 +329,11 @@ try {
 			if ($Username) {
 				Write-Log "ユーザー名が指定されています: $Username"
 			}
-			if ($Password) {
-				Write-Log "パスワードが指定されています"
-			}
+			if ($PSBoundParameters.ContainsKey('Password')) { Write-Log "パスワードが指定されています" }
 			if ($Domain) {
 				Write-Log "ドメインが指定されています: $Domain"
 			}
-			if (-not $Username -or -not $Password) {
-				Write-Log "ユーザー名またはパスワードが指定されていないため、対話入力で設定します"
-			}
+			if (-not $PSBoundParameters.ContainsKey('Password')) { Write-Log "パスワードが指定されていないため、対話入力で設定します" }
 
 			# 現在の設定を表示
 			Get-AutoLoginStatus
@@ -350,7 +346,45 @@ try {
 				}
 			}
 
-			$success = Set-AutoLogin -Username $Username -Password $Password -Domain $Domain
+			# 呼び出しパラメーターを準備（-Password は指定時のみ、未指定なら対話入力で取得）
+			$setParams = @{}
+			if ($Username) { $setParams.Username = $Username }
+			if ($Domain) { $setParams.Domain = $Domain }
+
+			if ($PSBoundParameters.ContainsKey('Password')) {
+				# 明示的に指定された場合（空文字はパスワードなしとしてそのまま渡す）
+				$setParams.Password = $Password
+			}
+			else {
+				# 未指定の場合はプロンプトで入力
+				do {
+					$securePassword1 = Read-Host "パスワードを入力してください (${Username})" -AsSecureString
+					$securePassword2 = Read-Host "確認のため、パスワードを再度入力してください" -AsSecureString
+
+					$password1 = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword1))
+					$password2 = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword2))
+
+					if ($password1 -eq $password2) {
+						$Password = $password1
+						Write-Log "パスワードが正常に設定されました"
+						break
+					}
+					else {
+						Write-Log "パスワードが一致しません。再度入力してください。" -Level "WARN"
+						$password1 = $null
+						$password2 = $null
+					}
+				} while ($true)
+
+				$password1 = $null
+				$password2 = $null
+				$securePassword1 = $null
+				$securePassword2 = $null
+
+				$setParams.Password = $Password
+			}
+
+			$success = Set-AutoLogin @setParams
 			if ($success) {
 				Write-Log "自動ログイン設定が正常に完了しました"
 				exit 0
