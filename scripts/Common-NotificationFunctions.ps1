@@ -6,6 +6,10 @@
 # グローバル変数（通知設定用）
 $Global:NotificationConfig = $null
 
+# TTS用シンセサイザー（初期化済みを再利用）
+$script:SpeechSynthesizer = $null
+$script:SpeechSynthesizerEngine = $null  # "SystemSpeech" or "SAPI"
+
 # 通知設定読み込み
 function Import-NotificationConfig {
 	param(
@@ -31,6 +35,130 @@ function Import-NotificationConfig {
 	}
 	catch {
 		Write-Warning "通知設定ファイルの読み込みに失敗しました: $($_.Exception.Message)"
+		return $false
+	}
+}
+
+# TTS 初期化
+function Initialize-TTSSynthesizer {
+	param(
+		[hashtable]$TtsConfig
+	)
+
+	try {
+		# 1) まず System.Speech を試行（Windows PowerShell 5.1 互換 / 一部の pwsh でも利用可）
+		try {
+			Add-Type -AssemblyName System.Speech -ErrorAction Stop
+			$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+
+			if ($null -ne $TtsConfig.rate) { $synth.Rate = [int]$TtsConfig.rate }
+			if ($null -ne $TtsConfig.volume) { $synth.Volume = [int]$TtsConfig.volume }
+
+			# 音声選択: voiceName > preferJapanese
+			if ($TtsConfig.voiceName) {
+				try { $synth.SelectVoice($TtsConfig.voiceName) } catch { }
+			}
+			elseif ($TtsConfig.preferJapanese -eq $true) {
+				$ja = $synth.GetInstalledVoices() |
+				Where-Object { $_.VoiceInfo.Culture.Name -like 'ja-*' } |
+				Select-Object -First 1
+				if ($ja) { $synth.SelectVoice($ja.VoiceInfo.Name) }
+			}
+
+			$script:SpeechSynthesizer = $synth
+			$script:SpeechSynthesizerEngine = "SystemSpeech"
+			return $true
+		}
+		catch {
+			# 2) 代替として COM SAPI.SpVoice（PowerShell 7 でも安定）
+			$synth = New-Object -ComObject SAPI.SpVoice
+
+			if ($null -ne $TtsConfig.rate) { $synth.Rate = [int]$TtsConfig.rate }
+			if ($null -ne $TtsConfig.volume) { $synth.Volume = [int]$TtsConfig.volume }
+
+			# 音声選択: voiceName > preferJapanese（COM の言語コード 0x0411 = 1041 = ja-JP）
+			if ($TtsConfig.voiceName) {
+				$voices = $synth.GetVoices()
+				for ($i = 0; $i -lt $voices.Count; $i++) {
+					$v = $voices.Item($i)
+					if ($v.GetDescription() -like "*$($TtsConfig.voiceName)*") { $synth.Voice = $v; break }
+				}
+			}
+			elseif ($TtsConfig.preferJapanese -eq $true) {
+				$jaVoices = $synth.GetVoices("Language=411")
+				if ($jaVoices.Count -gt 0) { $synth.Voice = $jaVoices.Item(0) }
+			}
+
+			$script:SpeechSynthesizer = $synth
+			$script:SpeechSynthesizerEngine = "SAPI"
+			return $true
+		}
+	}
+	catch {
+		Write-Verbose "TTS 初期化に失敗しました: $($_.Exception.Message)"
+		$script:SpeechSynthesizer = $null
+		$script:SpeechSynthesizerEngine = $null
+		return $false
+	}
+}
+
+# TTS 通知送信
+function Send-TTSNotification {
+	param(
+		[Parameter(Mandatory = $true)]
+		[string]$Message,
+
+		[Parameter(Mandatory = $false)]
+		[string]$EventType
+	)
+
+	try {
+		if (-not $Global:NotificationConfig) {
+			Write-Warning "通知設定が読み込まれていません"
+			return $false
+		}
+
+		$ttsConfig = $Global:NotificationConfig.notifications.providers.tts
+		if (-not $ttsConfig -or -not $ttsConfig.enabled) {
+			Write-Verbose "TTS 通知が無効になっています"
+			return $true
+		}
+
+		if (-not $script:SpeechSynthesizer) {
+			$null = Initialize-TTSSynthesizer -TtsConfig $ttsConfig
+		}
+
+		if (-not $script:SpeechSynthesizer) {
+			Write-Verbose "TTS シンセサイザーが初期化できませんでした"
+			return $false
+		}
+
+		# イベントフィルタリング
+		$speakEvents = @()
+		if ($ttsConfig.speakEvents) { $speakEvents = @($ttsConfig.speakEvents) }
+		if ($speakEvents.Count -gt 0 -and $EventType) {
+			if ($EventType -notin $speakEvents) {
+				Write-Verbose "TTS: イベント '$EventType' は speakEvents に含まれていないため読み上げをスキップ"
+				return $true
+			}
+		}
+
+		# メッセージ整形（改行を区切りとして読みやすく）
+		$spoken = $Message -replace "`r`n|`r|`n", "。 "
+
+		# 非同期で再生できる環境では非同期、なければ同期
+		if ($script:SpeechSynthesizer.PSObject.Methods.Name -contains 'SpeakAsync') {
+			$null = $script:SpeechSynthesizer.SpeakAsync($spoken)
+		}
+		else {
+			$null = $script:SpeechSynthesizer.Speak($spoken)
+		}
+
+		Write-Verbose "TTS 通知を再生しました ($script:SpeechSynthesizerEngine)"
+		return $true
+	}
+	catch {
+		Write-Warning "TTS 通知送信でエラー: $($_.Exception.Message)"
 		return $false
 	}
 }
@@ -423,6 +551,12 @@ function Send-Notification {
 		if ($Global:NotificationConfig.notifications.providers.teams.enabled) {
 			$teamsResult = Send-TeamsNotification -Message $message
 			$results += $teamsResult
+		}
+
+		# TTS通知
+		if ($Global:NotificationConfig.notifications.providers.tts.enabled) {
+			$ttsResult = Send-TTSNotification -Message $message -EventType $EventType
+			$results += $ttsResult
 		}
 
 		# 少なくとも一つの通知が成功した場合は成功とする

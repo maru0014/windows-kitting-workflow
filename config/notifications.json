@@ -22,6 +22,22 @@
         "channelId": "YOUR-CHANNEL-ID-HERE",
         "idStoragePath": "status/teams_machine_ids.json"
       },
+      "tts": {
+        "enabled": false,
+        "preferJapanese": true,
+        "voiceName": "",
+        "rate": 0,
+        "volume": 100,
+        "speakEvents": [
+          "onWorkflowStart",
+          "onWorkflowComplete",
+          "onWorkflowError",
+          "onWorkflowSuccess",
+          "onWorkflowFailure",
+          "onWorkflowCriticalError"
+        ],
+        "_comment": "preferJapaneseがtrueの場合、日本語音声(ja-*)があれば優先。voiceName指定時はその声名を優先。rate:-10..10, volume:0..100。speakEventsで読み上げ対象イベントを限定可能"
+      },
       "email": {
         "enabled": false,
         "smtp": {

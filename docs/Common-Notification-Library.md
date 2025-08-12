@@ -64,7 +64,7 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
 | 関数名 | 説明 |
 |--------|------|
 | `Import-NotificationConfig` | 通知設定ファイルを読み込み |
-| `Send-Notification` | 統合通知送信（Slack/Teams両対応） |
+| `Send-Notification` | 統合通知送信（Slack/Teams/TTS対応） |
 | `Get-PCSerialNumber` | PCシリアル番号取得 |
 
 ### Slack Functions
@@ -78,6 +78,12 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
 | 関数名 | 説明 |
 |--------|------|
 | `Send-TeamsNotification` | Teams専用通知送信（アダプティブカード対応） |
+
+### TTS Functions
+
+| 関数名 | 説明 |
+|--------|------|
+| `Send-TTSNotification` | ローカル音声合成で読み上げ（System.Speech または SAPI COM） |
 
 ### Utility Functions
 
@@ -111,11 +117,32 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
         "teamId": "your-team-id",
         "channelId": "your-channel-id",
         "idStoragePath": "status/teams_machine_ids.json"
+      },
+      "tts": {
+        "enabled": true,
+        "preferJapanese": true,
+        "voiceName": "",
+        "rate": 0,
+        "volume": 100,
+        "speakEvents": [
+          "onWorkflowStart",
+          "onWorkflowComplete",
+          "onWorkflowError",
+          "onWorkflowSuccess",
+          "onWorkflowFailure",
+          "onWorkflowCriticalError"
+        ]
       }
     }
   }
 }
 ```
+
+補足:
+- `preferJapanese`: true の場合、`ja-*` の音声があれば優先します。
+- `voiceName`: 特定の音声名を優先選択します（指定時はこちらが優先）。
+- `rate`: -10..10、`volume`: 0..100。
+- `speakEvents`: 読み上げ対象イベントを限定可能（空にすると全イベント対象）。
 
 ## 🚀 利点
 
@@ -178,6 +205,9 @@ if ($Global:NotificationConfig) {
     Write-Host "通知設定: 未読み込み"
     Import-NotificationConfig
 }
+
+# TTS を個別に確認
+Send-TTSNotification -Message "テスト読み上げです" -ErrorAction SilentlyContinue
 ```
 
 ## 📚 関連ドキュメント
