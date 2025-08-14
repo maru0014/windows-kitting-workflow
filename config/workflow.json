@@ -378,7 +378,7 @@
         "runAsAdmin": false,
         "parameters": {
           "SourcePath": "logs",
-          "DestinationPath": "\\\\192.168.x.xxx\\vmshare\\{pcname}",
+          "DestinationPath": "\\\\192.168.x.xxx\\share\\{pcname}\\{today}",
           "Username": "xxx",
           "Password": "xxxxxxxx",
           "Recurse": true,
@@ -403,7 +403,7 @@
         "runAsAdmin": false,
         "parameters": {
           "SourcePath": "backup",
-          "DestinationPath": "\\\\192.168.x.xxx\\vmshare\\{pcname}",
+          "DestinationPath": "\\\\192.168.x.xxx\\share\\{pcname}\\{today}",
           "Username": "xxx",
           "Password": "xxxxxxxx",
           "Recurse": true,
