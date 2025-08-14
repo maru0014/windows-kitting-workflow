@@ -54,6 +54,9 @@ if ($Help) {
   # JSON 等からテキストで資格情報を渡す例（推奨はしないが対応）
   .\copy_path_with_network.ps1 -SourcePath C:\Data -DestinationPath \\fileserver\share -DestinationUsername "domain\\user" -DestinationPassword "P@ssw0rd!" -Recurse
 
+  # プレースホルダ使用例（{PCNAME}, {TODAY}, {NOW} を自動置換）
+  .\copy_path_with_network.ps1 -SourcePath C:\Logs -DestinationPath \\fileserver\backup\{PCNAME}\{TODAY}\log-{NOW}.zip -Recurse -Force
+
 パラメータ:
   -SourcePath, -DestinationPath    コピー元/コピー先のパス。フォルダ/ファイルいずれも可。
   -DestinationCredential            宛先 UNC への接続に使用する資格情報。
@@ -67,6 +70,11 @@ if ($Help) {
   -DryRun                           実際のコピーは行わず内容をログ出力。
   -Quiet                            コンソール出力を抑制（ログには出力）。
   -Help                             このヘルプを表示。
+
+ プレースホルダ:
+   {PCNAME}                         実行端末のコンピューター名（大/小文字は不問）。
+   {TODAY}                          実行日の YYYY-MM-DD 形式。
+   {NOW}                            実行日時の YYYY-MM-DD_HH-MM-SS 形式（ゼロ埋め）。
 "@
     exit 0
 }
@@ -96,13 +104,16 @@ function Resolve-Placeholders {
     )
     if ([string]::IsNullOrWhiteSpace($Path)) { return $Path }
     $pcname = $env:COMPUTERNAME
+    $today = (Get-Date -Format 'yyyy-MM-dd')
+    $now = (Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')
     # 置換文字列に特殊解釈が入らないよう、MatchEvaluatorでリテラル置換
-    $pattern = '(?i)\{pcname\}'
-    $evaluator = {
-        param($m)
-        return $pcname
-    }
-    $resolved = [System.Text.RegularExpressions.Regex]::Replace($Path, $pattern, $evaluator)
+    $resolved = $Path
+    $patternPc = '(?i)\{pcname\}'
+    $resolved = [System.Text.RegularExpressions.Regex]::Replace($resolved, $patternPc, { param($m) $pcname })
+    $patternToday = '(?i)\{today\}'
+    $resolved = [System.Text.RegularExpressions.Regex]::Replace($resolved, $patternToday, { param($m) $today })
+    $patternNow = '(?i)\{now\}'
+    $resolved = [System.Text.RegularExpressions.Regex]::Replace($resolved, $patternNow, { param($m) $now })
     return $resolved
 }
 

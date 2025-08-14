@@ -1,9 +1,10 @@
-## copy_path_with_network ガイド（共有コピーと資格情報・{pcname} 対応）
+## copy_path_with_network ガイド（共有コピーと資格情報・{pcname}/{today}/{now} 対応）
 
 このドキュメントでは、Windows Kitting Workflow に追加された以下の機能について説明します。
 
 - プレーンテキストの資格情報（JSON 経由）を実行時に PSCredential へ変換して使用
 - コピー先・コピー元パスで `{pcname}` プレースホルダを実PC名に展開
+- パスで `{today}`/`{now}` プレースホルダを実行日/時刻に展開（`{today}`: YYYY-MM-DD, `{now}`: YYYY-MM-DD_HH-mm-ss、ゼロ埋め・大/小文字不問）
 - 相対パスをワークフロー ルート基準で解決
 - ワークフロー終盤で `logs` と `backup` を共有フォルダへアップロードする最終ステップ
 
@@ -26,11 +27,13 @@
 
 注意: セキュリティ上、プレーンテキストのパスワードは推奨されません。代替案は「セキュリティ上の注意」を参照してください。
 
-### プレースホルダ `{pcname}`
+### プレースホルダ
 
-パス中の `{pcname}` は、実行時に `COMPUTERNAME`（例: `DESKTOP-1234`）へ展開されます。
+- `{pcname}`: 実行端末の `COMPUTERNAME` に展開（例: `DESKTOP-1234`）
+- `{today}`: 実行日の `YYYY-MM-DD` に展開（例: `2025-08-14`）
+- `{now}`: 実行日時の `YYYY-MM-DD_HH-mm-ss` に展開（例: `2025-08-14_13-05-09`）
 
-例: `\\192.168.0.1\vmshare\logs-{pcname}` → `\\192.168.0.1\vmshare\logs-DESKTOP-1234`
+補足: いずれも大/小文字は不問（例: `{PCNAME}`, `{Today}`, `{NOW}` も可）。
 
 ### 相対パスの解決
 
@@ -42,7 +45,7 @@
 # 宛先が UNC、テキスト資格情報を使用
 ./scripts/setup/copy-path-with-network.ps1 `
   -SourcePath logs `
-  -DestinationPath "\\192.168.0.1\vmshare\logs-{pcname}" `
+  -DestinationPath "\\192.168.0.1\share\logs-{pcname}\{today}" `
   -DestinationUsername "domain\user" `
   -DestinationPassword "P@ssw0rd!" `
   -Recurse -Force
@@ -51,6 +54,15 @@
 ./scripts/setup/copy-path-with-network.ps1 `
   -SourcePath "\\filesrv\in\report.txt" `
   -DestinationPath backup\report.txt `
+  -Username "domain\user" `
+  -Password "P@ssw0rd!"
+```
+
+```powershell
+# {now} を使ってファイル名に日時を付与
+./scripts/setup/copy-path-with-network.ps1 `
+  -SourcePath logs\latest.txt `
+  -DestinationPath "\\192.168.0.1\share\logs-{pcname}\log-{now}.txt" `
   -Username "domain\user" `
   -Password "P@ssw0rd!"
 ```
@@ -68,7 +80,7 @@
   "runAsAdmin": false,
   "parameters": {
     "SourcePath": "logs",
-    "DestinationPath": "\\\\192.168.x.xxx\\vmshare\\logs-{pcname}",
+    "DestinationPath": "\\\\192.168.x.xxx\\share\\logs-{pcname}",
     "Username": "xxx",
     "Password": "xxxxxxxx",
     "Recurse": true,
@@ -89,7 +101,7 @@
   "runAsAdmin": false,
   "parameters": {
     "SourcePath": "backup",
-    "DestinationPath": "\\\\192.168.x.xxx\\vmshare\\backup-{pcname}",
+    "DestinationPath": "\\\\192.168.x.xxx\\share\\backup-{pcname}",
     "Username": "xxx",
     "Password": "xxxxxxxx",
     "Recurse": true,
