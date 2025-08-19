@@ -285,6 +285,26 @@
         "onError": "continue"
       },
       {
+        "id": "install-ppkg",
+        "name": "PPKGインストール",
+        "description": "Provisioning Package を適用（start_pins.ppkg）",
+        "script": "scripts/setup/install-ppkg.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "PackagePath": "config/start_pins.ppkg"
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/ppkg-install.completed"
+        },
+        "timeout": 300,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": ["apply-taskbar-layout"],
+        "onError": "continue"
+      },
+      {
         "id": "setup-bitlocker",
         "name": "BitLocker暗号化設定",
         "description": "システムドライブのBitLocker暗号化を設定（PINCode空文字列時は実行時指定またはPIN無効、NotifyRecoveryPasswordで通知内容制御）",
