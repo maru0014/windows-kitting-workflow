@@ -26,16 +26,16 @@
 - **フルパス**: `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager`
 - **キー名**: `SilentInstalledAppsEnabled`
 - **設定値**: `dword:00000000`
-- **意味**: サイレントアプリインストールの制御
+- **意味**: スタートメニューに自動でアプリアイコンを生成する
 - **選択肢**:
-  - `0` (dword:00000000): 無効（ユーザー同意なしでのアプリ自動インストールを防止）
-  - `1` (dword:00000001): 有効（自動インストールを許可）
+  - `0` (dword:00000000): 無効（アイコンを自動生成しない）
+  - `1` (dword:00000001): 有効（アイコンを自動生成する）
 
 ### ContentDeliveryAllowed
 - **フルパス**: `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager`
 - **キー名**: `ContentDeliveryAllowed`
 - **設定値**: `dword:00000000`
-- **意味**: Microsoftからのコンテンツ配信制御
+- **意味**: 「おすすめ」として表示されるコンテンツの配信を許可する
 - **選択肢**:
   - `0` (dword:00000000): 無効（コンテンツ配信を無効化）
   - `1` (dword:00000001): 有効（コンテンツ配信を許可）
@@ -53,7 +53,7 @@
 - **フルパス**: `HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager`
 - **キー名**: `PreInstalledAppsEnabled`
 - **設定値**: `dword:00000000`
-- **意味**: プリインストールアプリの制御
+- **意味**: Microsoftによってプレインストールされるサードパーティ製のアプリ（例: TikTok, Instagram, Spotifyなど）の自動インストールを制御します。
 - **選択肢**:
   - `0` (dword:00000000): 無効（プリインストールアプリを無効化）
   - `1` (dword:00000001): 有効（プリインストールアプリを許可）
