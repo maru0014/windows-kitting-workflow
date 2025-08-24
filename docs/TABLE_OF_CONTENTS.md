@@ -19,6 +19,7 @@
 4. **[Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md)** - Wi-Fi自動設定
 5. **[スタートアップアプリ無効化ガイド](disable_startup_apps_guide.md)** - 指定名のスタートアップ登録を無効化
 6. **[ローカルユーザー削除ガイド](remove_user_guide.md)** - ローカルユーザーとプロファイルの削除
+7. **[ローカルユーザー作成ガイド](create-user-guide.md)** - CSV/引数からユーザー作成とグループ追加
 
 ### 🔔 通知機能を設定したい方
 1. **[共通通知ライブラリ](Common-Notification-Library.md)** - 通知機能の共通化実装
@@ -51,6 +52,7 @@
 | [ローカルユーザー削除ガイド](remove_user_guide.md) | 管理者 | ローカルユーザーとプロファイルの安全な削除手順 |
 | [タスクバー設定ガイド](taskbar_layout_guide.md) | 中級者 | タスクバーのピン留め構成と適用手順 |
 | [PPKG インストールガイド](ppkg_installation_guide.md) | 中級者 | PPKG の適用・削除・ログ・ワークフロー統合 |
+| [ローカルユーザー作成ガイド](create-user-guide.md) | 管理者 | ローカルユーザー作成とグループ追加 |
 
 
 ### 🔔 通知・連携機能

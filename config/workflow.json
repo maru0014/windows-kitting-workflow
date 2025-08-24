@@ -152,6 +152,29 @@
         "onError": "stop"
       },
       {
+        "id": "create-user",
+        "name": "ローカルユーザー作成",
+        "description": "machine_list.csvまたは引数に基づきローカルユーザーを作成し、グループに追加",
+        "script": "scripts/setup/create-user.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "ConfigPath": "config/machine_list.csv",
+          "UserName": "",
+          "Password": "",
+          "Groups": ["Administrators"]
+        },
+        "completionCheck": {
+          "type": "file",
+          "path": "status/create-user.completed"
+        },
+        "timeout": 180,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": ["rename-computer"],
+        "onError": "continue"
+      },
+      {
         "id": "import-registry",
         "name": "レジストリ設定インポート",
         "description": ".regファイルの一括インポートとシステム設定の最適化",
