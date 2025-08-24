@@ -1,7 +1,7 @@
-# Office インストール実行スクリプト
+﻿# Office インストール実行スクリプト
 param(
-	[string]$ConfigPath = "config\machine_list.csv",
-	[switch]$Force
+    [string]$ConfigPath = "config\machine_list.csv",
+    [switch]$Force
 )
 
 # 共通ログ関数の読み込み
@@ -11,82 +11,82 @@ param(
 
 # ログ関数
 function Write-Log {
-	param(
-		[string]$Message,
-		[ValidateSet("INFO", "WARN", "ERROR")]
-		[string]$Level = "INFO"
-	)
+    param(
+        [string]$Message,
+        [ValidateSet("INFO", "WARN", "ERROR")]
+        [string]$Level = "INFO"
+    )
 
-	Write-ScriptLog -Message $Message -Level $Level -ScriptName "InstallOffice" -LogFileName "install-office.log"
+    Write-ScriptLog -Message $Message -Level $Level -ScriptName "InstallOffice" -LogFileName "install-office.log"
 }
 
 function Get-SerialNumber {
-	try {
-		$serialNumber = (Get-WmiObject -Class Win32_SystemEnclosure).SerialNumber
-		if ([string]::IsNullOrWhiteSpace($serialNumber)) {
-			$serialNumber = (Get-WmiObject -Class Win32_BIOS).SerialNumber
-		}
-		return $serialNumber.Trim()
-	}
-	catch {
-		Write-Log "シリアル番号の取得に失敗しました: $($_.Exception.Message)" -Level "ERROR"
-		return $null
-	}
+    try {
+        $serialNumber = (Get-WmiObject -Class Win32_SystemEnclosure).SerialNumber
+        if ([string]::IsNullOrWhiteSpace($serialNumber)) {
+            $serialNumber = (Get-WmiObject -Class Win32_BIOS).SerialNumber
+        }
+        return $serialNumber.Trim()
+    }
+    catch {
+        Write-Log "シリアル番号の取得に失敗しました: $($_.Exception.Message)" -Level "ERROR"
+        return $null
+    }
 }
 
 function Import-MachineList {
-	param([string]$CsvPath)
+    param([string]$CsvPath)
 
-	try {
-		if (-not (Test-Path $CsvPath)) {
-			Write-Log "機器リストファイルが見つかりません: $CsvPath" -Level "ERROR"
-			return $null
-		}
+    try {
+        if (-not (Test-Path $CsvPath)) {
+            Write-Log "機器リストファイルが見つかりません: $CsvPath" -Level "ERROR"
+            return $null
+        }
 
-		$machines = Import-Csv $CsvPath
-		Write-Log "機器リスト読み込み完了: $($machines.Count)台"
-		return $machines
-	}
-	catch {
-		Write-Log "機器リストの読み込みに失敗しました: $($_.Exception.Message)" -Level "ERROR"
-		return $null
-	}
+        $machines = Import-Csv $CsvPath
+        Write-Log "機器リスト読み込み完了: $($machines.Count)台"
+        return $machines
+    }
+    catch {
+        Write-Log "機器リストの読み込みに失敗しました: $($_.Exception.Message)" -Level "ERROR"
+        return $null
+    }
 }
 
 function Find-MachineBySerial {
-	param(
-		[array]$MachineList,
-		[string]$SerialNumber
-	)
+    param(
+        [array]$MachineList,
+        [string]$SerialNumber
+    )
 
-	foreach ($machine in $MachineList) {
-		if ($machine."Serial Number" -eq $SerialNumber) {
-			return $machine
-		}
-	}
-	return $null
+    foreach ($machine in $MachineList) {
+        if ($machine."Serial Number" -eq $SerialNumber) {
+            return $machine
+        }
+    }
+    return $null
 }
 
 function Get-CanonicalLicenseType {
-	param([string]$LicenseType)
+    param([string]$LicenseType)
 
-	if ([string]::IsNullOrWhiteSpace($LicenseType)) { return $null }
+    if ([string]::IsNullOrWhiteSpace($LicenseType)) { return $null }
 
-	$normalized = $LicenseType.Trim().ToLower()
+    $normalized = $LicenseType.Trim().ToLower()
 
-	switch ($normalized) {
-		"o365" { return "365" }
-		"m365" { return "365" }
-		"office365" { return "365" }
-		"365" { return "365" }
-		"bundle2019" { return "bundle2019" }
-		"office2019" { return "bundle2019" }
-		"perpetual2019" { return "bundle2019" }
-		"bundle2021" { return "bundle2021" }
-		"office2021" { return "bundle2021" }
-		"perpetual2021" { return "bundle2021" }
-		default { return $normalized }
-	}
+    switch ($normalized) {
+        "o365" { return "365" }
+        "m365" { return "365" }
+        "office365" { return "365" }
+        "365" { return "365" }
+        "bundle2019" { return "bundle2019" }
+        "office2019" { return "bundle2019" }
+        "perpetual2019" { return "bundle2019" }
+        "bundle2021" { return "bundle2021" }
+        "office2021" { return "bundle2021" }
+        "perpetual2021" { return "bundle2021" }
+        default { return $normalized }
+    }
 }
 
 function Resolve-OdtPaths {
@@ -95,31 +95,21 @@ function Resolve-OdtPaths {
     )
 
     $workflowRoot = Get-WorkflowRoot
-    $officeDir = Join-Path $workflowRoot "scripts\setup\office"
+    $officeDir = Join-Path $workflowRoot "config\office"
 
     $setupCandidates = @(
-        (Join-Path $officeDir "setup.exe"),
-        (Join-Path $officeDir "ODT\setup.exe")
+        (Join-Path $officeDir "setup.exe")
     )
 
     $templateCandidates = switch ($CanonicalLicenseType) {
         "365" {
             @(
-                (Join-Path $officeDir "configuration-365.xml"),
-                (Join-Path $officeDir "installconfig-365.xml"),
-                (Join-Path $officeDir "configuration.xml")
-            )
-        }
-        "bundle2019" {
-            @(
-                (Join-Path $officeDir "configuration-2019-bundle.xml"),
-                (Join-Path $officeDir "installconfig-2019.xml")
+                (Join-Path $officeDir "configuration-Office365-x64.xml")
             )
         }
         "bundle2021" {
             @(
-                (Join-Path $officeDir "configuration-2021-bundle.xml"),
-                (Join-Path $officeDir "installconfig-2021.xml")
+                (Join-Path $officeDir "configuration-Office2021.xml")
             )
         }
         default {
@@ -140,13 +130,13 @@ function Resolve-OdtPaths {
 }
 
 function Protect-ProductKey {
-	param([string]$ProductKey)
+    param([string]$ProductKey)
 
-	if ([string]::IsNullOrWhiteSpace($ProductKey)) { return "" }
-	$trimmed = $ProductKey.Trim()
-	if ($trimmed.Length -le 5) { return "*****" }
-	$last = $trimmed.Substring($trimmed.Length - 5)
-	return ("*" * 5) + "-*****-*****-*****-" + $last
+    if ([string]::IsNullOrWhiteSpace($ProductKey)) { return "" }
+    $trimmed = $ProductKey.Trim()
+    if ($trimmed.Length -le 5) { return "*****" }
+    $last = $trimmed.Substring($trimmed.Length - 5)
+    return ("*" * 5) + "-*****-*****-*****-" + $last
 }
 
 function New-ConfiguredXmlFromTemplate {
@@ -163,13 +153,13 @@ function New-ConfiguredXmlFromTemplate {
 
         $replacements = @{
             "{{SERIAL_NUMBER}}" = $SerialNumber
-            "{{MACHINE_NAME}}"   = $MachineName
-            "{{PRODUCT_KEY}}"    = ($ProductKey ? $ProductKey : "")
+            "{{MACHINE_NAME}}"  = $MachineName
+            "{{PRODUCT_KEY}}"   = $ProductKey
         }
 
         foreach ($k in $replacements.Keys) {
             $v = [string]$replacements[$k]
-            $xmlContent = $xmlContent -replace [Regex]::Escape($k), [System.Text.RegularExpressions.Regex]::Escape($v).Replace('\\','\\')
+            $xmlContent = $xmlContent -replace [Regex]::Escape($k), [System.Text.RegularExpressions.Regex]::Escape($v).Replace('\\', '\\')
         }
 
         Set-Content -Path $OutputPath -Value $xmlContent -Encoding UTF8
@@ -212,22 +202,22 @@ function Invoke-OdtConfigure {
 }
 
 function New-CompletionFlag {
-	param(
-		[string]$SerialNumber,
-		[string]$MachineName,
-		[string]$LicenseType,
-		[string]$InstallerPath,
-		[string]$MaskedKey
-	)
+    param(
+        [string]$SerialNumber,
+        [string]$MachineName,
+        [string]$LicenseType,
+        [string]$InstallerPath,
+        [string]$MaskedKey
+    )
 
-	$statusDir = Get-WorkflowPath -PathType "Status"
-	if (-not (Test-Path $statusDir)) {
-		New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-	}
+    $statusDir = Get-WorkflowPath -PathType "Status"
+    if (-not (Test-Path $statusDir)) {
+        New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
+    }
 
-	$flagFile = Join-Path $statusDir "install-office.completed"
-	$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-	$content = @"
+    $flagFile = Join-Path $statusDir "install-office.completed"
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $content = @"
 Officeインストール完了
 実行時刻: $timestamp
 対象PC名: $MachineName
@@ -236,8 +226,8 @@ Officeインストール完了
 使用インストーラ: $InstallerPath
 Office Product Key (masked): $MaskedKey
 "@
-	Set-Content -Path $flagFile -Value $content -Encoding UTF8
-	Write-Log "完了フラグファイルを作成しました: $flagFile"
+    Set-Content -Path $flagFile -Value $content -Encoding UTF8
+    Write-Log "完了フラグファイルを作成しました: $flagFile"
 }
 
 # メイン処理
@@ -247,15 +237,15 @@ Write-Log "=== Officeインストール処理開始 ==="
 $workflowRoot = Get-WorkflowRoot
 $fullConfigPath = Join-Path $workflowRoot $ConfigPath
 if (-not (Test-Path $fullConfigPath)) {
-	Write-Log "設定ファイルが見つかりません: $fullConfigPath" -Level "ERROR"
-	exit 1
+    Write-Log "設定ファイルが見つかりません: $fullConfigPath" -Level "ERROR"
+    exit 1
 }
 
 # シリアル番号取得
 $serialNumber = Get-SerialNumber
 if (-not $serialNumber) {
-	Write-Log "シリアル番号が取得できませんでした" -Level "ERROR"
-	exit 1
+    Write-Log "シリアル番号が取得できませんでした" -Level "ERROR"
+    exit 1
 }
 Write-Log "現在のシリアル番号: $serialNumber"
 
@@ -266,8 +256,8 @@ if (-not $machineList) { exit 1 }
 # 該当する機器情報を検索
 $targetMachine = Find-MachineBySerial -MachineList $machineList -SerialNumber $serialNumber
 if (-not $targetMachine) {
-	Write-Log "シリアル番号 '$serialNumber' に対応する機器情報が見つかりません" -Level "ERROR"
-	exit 1
+    Write-Log "シリアル番号 '$serialNumber' に対応する機器情報が見つかりません" -Level "ERROR"
+    exit 1
 }
 
 $machineName = $targetMachine."Machine Name"
@@ -278,8 +268,8 @@ Write-Log "対象PC名: $machineName | ライセンスタイプ: $licenseTypeRaw
 
 $canonical = Get-CanonicalLicenseType -LicenseType $licenseTypeRaw
 if (-not $canonical) {
-	Write-Log "ライセンスタイプが未指定、または不明です: '$licenseTypeRaw'" -Level "ERROR"
-	exit 1
+    Write-Log "ライセンスタイプが未指定、または不明です: '$licenseTypeRaw'" -Level "ERROR"
+    exit 1
 }
 
 $paths = Resolve-OdtPaths -CanonicalLicenseType $canonical
@@ -294,17 +284,30 @@ if (-not $paths.TemplatePath) {
 Write-Log "ODT setup: $($paths.SetupPath)"
 Write-Log "テンプレート: $($paths.TemplatePath)"
 
-# Bundle系はプロダクトキー必須
-if ($canonical -like "bundle*" -and [string]::IsNullOrWhiteSpace($productKey)) {
-    Write-Log "Bundleライセンスでは 'Office Product Key' が必須です" -Level "ERROR"
+# 365 はそのまま既定XMLを使用、Bundle2021 はテンポラリにコピーして PRODUCT_KEY を置換
+$configuredXmlPath = $null
+if ($canonical -eq "365") {
+    $configuredXmlPath = $paths.TemplatePath
+    Write-Log "365ライセンス: 既定の構成XMLを使用します: $configuredXmlPath"
+}
+elseif ($canonical -eq "bundle2021") {
+    if ([string]::IsNullOrWhiteSpace($productKey)) {
+        Write-Log "Bundle2021 ライセンスでは 'Office Product Key' が必須です" -Level "ERROR"
+        exit 1
+    }
+
+    $tempXml = Join-Path $env:TEMP ("odt-config-" + $serialNumber + "-" + $canonical + ".xml")
+    $xmlOk = New-ConfiguredXmlFromTemplate -TemplatePath $paths.TemplatePath -OutputPath $tempXml -SerialNumber $serialNumber -MachineName $machineName -ProductKey $productKey
+    if (-not $xmlOk) { exit 1 }
+    $configuredXmlPath = $tempXml
+    Write-Log "Bundle2021ライセンス: テンポラリ構成XMLを生成しました: $configuredXmlPath"
+}
+else {
+    Write-Log "未対応のライセンスタイプです: '$canonical'" -Level "ERROR"
     exit 1
 }
 
-$tempXml = Join-Path $env:TEMP ("odt-config-" + $serialNumber + "-" + $canonical + ".xml")
-$xmlOk = New-ConfiguredXmlFromTemplate -TemplatePath $paths.TemplatePath -OutputPath $tempXml -SerialNumber $serialNumber -MachineName $machineName -ProductKey $productKey
-if (-not $xmlOk) { exit 1 }
-
-$success = Invoke-OdtConfigure -SetupPath $paths.SetupPath -ConfiguredXmlPath $tempXml
+$success = Invoke-OdtConfigure -SetupPath $paths.SetupPath -ConfiguredXmlPath $configuredXmlPath
 if ($success) {
     $maskedKey = Protect-ProductKey -ProductKey $productKey
     New-CompletionFlag -SerialNumber $serialNumber -MachineName $machineName -LicenseType $licenseTypeRaw -InstallerPath $paths.SetupPath -MaskedKey $maskedKey
