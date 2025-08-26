@@ -29,8 +29,8 @@ REM ログディレクトリの作成
 if not exist "logs" mkdir logs
 if not exist "status" mkdir status
 
-REM 開始時刻の記録（UTF-8 BOMでログファイルを初期化）
-powershell -Command "[System.IO.File]::WriteAllText('logs\\workflow.log', \"`[$([DateTime]::Now.ToString('yyyy/MM/dd HH:mm:ss'))] [INFO] Windows Kitting Workflow開始`r`n\", [System.Text.Encoding]::UTF8)"
+REM 開始時刻の記録（UTF-8 BOMで追記。新規作成時のみBOM付与）
+powershell -Command "$utf8 = New-Object System.Text.UTF8Encoding($true); [System.IO.File]::AppendAllText('logs\\workflow.log', \"`[$([DateTime]::Now.ToString('yyyy/MM/dd HH:mm:ss'))] [INFO] Windows Kitting Workflow開始`r`n\", $utf8)"
 
 echo [INFO] 管理者権限を確認しました
 echo [INFO] ワークフローディレクトリ: %CD%
