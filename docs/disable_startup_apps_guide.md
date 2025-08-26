@@ -37,11 +37,11 @@
 2. 値データ（Binary）の先頭バイトを `0x03` に設定して無効化します（既に `0x03` の場合はスキップ）。
 3. `StartupApproved` に該当が無いが `...\CurrentVersion\Run` に登録のみ存在する場合は、対応する `StartupApproved\Run/Run32` に「無効状態(0x03)」のエントリを新規作成します。
 
-## 出力・ログ・完了マーカー
+## 出力・ログ・完了判定
 - 変更一覧はログにも記録されます。
-- 完了マーカー: `Get-CompletionMarkerPath` により JSON が作成されます。
-  - ファイル名例: `disable-startup-apps-onedrive.json`、`disable-startup-apps-teams-allusers.json`
-  - 含まれる項目: `completedAt`, `name`, `allUsers`, `changedCount`, `changes[]`
+- 完了判定: MainWorkflow が `status/{id}.completed`（既定: `status/disable-startup-apps.completed`）を作成します
+  - 互換: `completionCheck.path` のパスが存在しても完了とみなされます
+  - スクリプト内部でのマーカー作成は廃止しました
 
 ## 終了コード
 - 0: スクリプト処理が正常終了（該当なしでも処理が完了していれば 0）

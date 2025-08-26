@@ -33,8 +33,7 @@ Windows Kitting Workflowは高度にカスタマイズ可能なシステムで�
         "type": "powershell",
         "runAsAdmin": true,
         "completionCheck": {
-          "type": "file",
-          "path": "status/init.completed"
+          "type": "file"
         }
       },
       {
@@ -68,8 +67,7 @@ Windows Kitting Workflowは高度にカスタマイズ可能なシステムで�
 #### ファイル存在チェック
 ```json
 "completionCheck": {
-  "type": "file",
-  "path": "status/step-name.completed"
+  "type": "file"
 }
 ```
 
@@ -130,17 +128,7 @@ try {
     # 実際の処理をここに記述
     Write-Log "カスタム処理を実行中..." -Level "INFO"
     
-    # 完了マーカーの作成
-    $completionMarker = "status\custom-step.completed"
-    if (-not (Test-Path (Split-Path $completionMarker))) {
-        New-Item -ItemType Directory -Path (Split-Path $completionMarker) -Force
-    }
-    
-    @{
-        completedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        status = "success"
-        customData = "処理完了"
-    } | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+    # 完了判定は MainWorkflow 側が行います（スクリプト内のマーカー作成は不要）
     
     Write-Log "カスタムスクリプト完了" -Level "INFO"
 }
@@ -160,8 +148,7 @@ catch {
   "type": "powershell",
   "runAsAdmin": true,
   "completionCheck": {
-    "type": "file",
-    "path": "status/custom-step.completed"
+    "type": "file"
   },
   "dependsOn": ["install-winget"],
   "timeout": 600

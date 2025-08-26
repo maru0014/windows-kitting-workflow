@@ -87,7 +87,8 @@ scripts/setup/apply-taskbar-layout.ps1 -Force -Quiet
 
 - **ログ/結果ファイル**
   - ログ: `logs/apply-taskbar-layout.log`
-  - 完了マーカー: `status/apply-taskbar-layout.completed`
+  - 完了判定: MainWorkflow が `status/{id}.completed`（既定: `status/apply-taskbar-layout.completed`）を作成
+    - 互換: `completionCheck.path` が設定されている場合、そのパスの存在でも完了とみなされます
 
 ---
 
@@ -104,7 +105,7 @@ scripts/setup/apply-taskbar-layout.ps1 -Force -Quiet
   "type": "powershell",
   "runAsAdmin": false,
   "parameters": { "Force": true, "Quiet": true },
-  "completionCheck": { "type": "file", "path": "status/apply-taskbar-layout.completed" },
+  "completionCheck": { "type": "file" },
   "timeout": 180,
   "retryCount": 1,
   "rebootRequired": false,

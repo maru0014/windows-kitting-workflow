@@ -179,8 +179,9 @@ WindowsアップデートのみでOfficeアップデートを除外する設定�
   - インストール結果
   - エラー情報
 
-### 完了マーカー
-処理完了時に `status/windows-update.completed` ファイルが作成されます。
+### 完了判定
+処理完了時に MainWorkflow が `status/{id}.completed`（既定: `status/windows-update.completed`）を作成します。
+互換として、`completionCheck.path` のパスが存在する場合でも完了とみなされます。
 
 ```json
 {

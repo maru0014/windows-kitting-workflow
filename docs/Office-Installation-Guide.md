@@ -46,11 +46,11 @@ pwsh -File scripts/setup/install-office.ps1 -Force
 3. ODT の `setup.exe` とライセンスタイプに対応するテンプレート XML を探索
 4. テンプレート内の `{{SERIAL_NUMBER}}`, `{{MACHINE_NAME}}`, `{{PRODUCT_KEY}}` を置換した一時 XML を `%TEMP%` に生成
 5. `setup.exe /configure <一時XML>` を実行
-6. 成否をログ出力し、完了時は `status/install-office.completed` を作成
+6. 成否をログ出力。完了判定は MainWorkflow が `status/{id}.completed`（既定: `status/install-office.completed`）を作成します
 
 ### ログと完了フラグ
 - ログ: `logs/install-office.log`（共通ログ基盤により保存。スクリプト名: `InstallOffice`）
-- 完了フラグ: `status/install-office.completed`
+- 完了判定: MainWorkflow が `status/{id}.completed`（既定: `status/install-office.completed`）を作成
 
 `Office Product Key` はログ上で末尾 5 桁を除きマスクされます。
 

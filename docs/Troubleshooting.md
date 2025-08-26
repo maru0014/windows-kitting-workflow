@@ -420,7 +420,7 @@ Get-ScheduledTask -TaskName "WindowsKittingWorkflow*" | Unregister-ScheduledTask
 2. **手動でのクリーンアップ**
    ```powershell
    # 一時ファイルの削除
-   Remove-Item status\*.completed -Force
+   Remove-Item status\*.completed -Force  # 既定のステップIDベース完了マーカー
    Remove-Item logs\*.log -Force
    ```
 

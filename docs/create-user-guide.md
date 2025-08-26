@@ -43,7 +43,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -C
 - 引数未指定時は `machine_list.csv` からシリアル番号一致行を検索して利用
 - 既存ユーザーが存在する場合は有効化し、パスワードを更新
 - 指定グループに既に所属している場合はスキップ
-- 完了時に `status/create-user.completed` を作成（JSON、作成時刻・ユーザー名・グループ・ソースを記録）
+- 完了判定は MainWorkflow が `status/{id}.completed`（既定: `status/create-user.completed`）を作成します
+  - 互換: `completionCheck.path` が設定されている場合、そのパスの存在でも完了とみなされます
+  - スクリプト内部での完了マーカー作成は廃止（詳細はログを参照）
 
 ## エラーハンドリング
 - 管理者権限でない場合はエラー終了
@@ -68,8 +70,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -C
     "Groups": ["Administrators"]
   },
   "completionCheck": {
-    "type": "file",
-    "path": "status/create-user.completed"
+    "type": "file"
   },
   "timeout": 180,
   "retryCount": 1,
@@ -84,4 +85,4 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -C
 - スクリプト内部ではパスワードを `SecureString` に変換してから `New-LocalUser`/`Set-LocalUser` に渡しています。
 
 ---
-最終更新: 2025-08-24
+最終更新: 2025-08-26（完了マーカー集中管理に対応）

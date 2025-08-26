@@ -14,7 +14,8 @@
 ### スクリプトの場所
 - スクリプト: `scripts/setup/install-ppkg.ps1`
 - ログ: `logs/scripts/install-ppkg.log` と `logs/ppkg/` 配下
-- 完了マーカー: `status/ppkg-install.completed`
+- 完了判定: MainWorkflow が `status/{id}.completed`（既定: `status/install-ppkg.completed`）を作成
+  - 互換: `completionCheck.path` のパスが存在しても完了とみなされます
 
 ### 使い方（単体実行）
 ```powershell
@@ -52,14 +53,14 @@
   "parameters": {
     "PackagePath": "config/start_pins.ppkg"
   },
-  "completionCheck": { "type": "file", "path": "status/ppkg-install.completed" },
+  "completionCheck": { "type": "file" },
   "dependsOn": ["apply-taskbar-layout"],
   "onError": "continue"
 }
 ```
 
 ### 成功の確認
-- `status/ppkg-install.completed` が作成される（JSON 内容に `packageId`, `packageName`, `version` を含む）
+- `status/install-ppkg.completed`（または互換パス）が存在する（JSON には `packageId`, `packageName`, `version` などの情報が MainWorkflow 側詳細に保存される場合があります）
 - `logs/ppkg/` に `Add-ProvisioningPackage` のログが出力される
 - スタートメニューのピン留めが「コントロールパネル」と「Microsoft Edge」のみに置き換わる（サンプル PPKG の場合）
 

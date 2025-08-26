@@ -39,8 +39,7 @@ BitLocker設定は `config/workflow.json` の `setup-bitlocker` ステップで�
     "Force": false
   },
   "completionCheck": {
-    "type": "file",
-    "path": "status/setup-bitlocker.completed"
+    "type": "file"
   },
   "timeout": 600,
   "retryCount": 1,
@@ -339,4 +338,4 @@ Get-WinEvent -LogName System | Where-Object {$_.ProviderName -like "*BitLocker*"
 ### ファイル出力
 - 回復キーファイル: `backup/bitlocker-recovery-keys/`
 - ログファイル: `logs/scripts/setup-bitlocker.log`
-- 完了フラグ: `status/setup-bitlocker.completed`
+- 完了判定: MainWorkflow が `status/{id}.completed`（既定: `status/setup-bitlocker.completed`）を作成

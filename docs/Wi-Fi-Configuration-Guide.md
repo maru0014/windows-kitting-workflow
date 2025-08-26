@@ -18,7 +18,8 @@
 2. **Wi-Fiアダプター確認**: システムにWi-Fiアダプターが存在し、有効化されているかを確認
 3. **プロファイル適用**: `netsh wlan add profile`コマンドでプロファイルを追加
 4. **結果確認**: 現在のWi-Fiプロファイル一覧を表示
-5. **完了記録**: `status\setup-wifi.completed`ファイルを作成
+5. **完了判定**: MainWorkflow が `status/{id}.completed`（既定: `status/setup-wifi.completed`）を作成
+   - 互換: `completionCheck.path` が設定されている場合、そのパスの存在でも完了とみなされます
 
 ### Forceオプション
 
@@ -229,8 +230,7 @@ netsh wlan add profile filename="config\wi-fi.xml"
   "type": "powershell",
   "runAsAdmin": true,
   "completionCheck": {
-    "type": "file",
-    "path": "status/setup-wifi.completed"
+    "type": "file"
   },
   "timeout": 120,
   "retryCount": 2,
@@ -254,8 +254,7 @@ netsh wlan add profile filename="config\wi-fi.xml"
     "Force": true
   },
   "completionCheck": {
-    "type": "file",
-    "path": "status/setup-wifi.completed"
+    "type": "file"
   },
   "timeout": 120,
   "retryCount": 2,

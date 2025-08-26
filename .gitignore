@@ -119,3 +119,7 @@ venv/
 workflow.local.json
 notifications.local.json
 config.local.json
+
+# バックアップファイル
+*.cat
+*.dat
