@@ -33,7 +33,8 @@ Windows Kitting Workflowは高度にカスタマイズ可能なシステムで�
         "type": "powershell",
         "runAsAdmin": true,
         "completionCheck": {
-          "type": "file"
+          "type": "file",
+          "path": "status/init.completed"
         }
       },
       {
@@ -163,24 +164,35 @@ catch {
 {
   "notifications": {
     "enabled": true,
-    "webhook": {
-      "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
-      "type": "slack"
+    "providers": {
+      "teams": {
+        "enabled": true,
+        "flowUrl": "https://your-teams-flow-url-here",
+        "teamId": "your-team-id",
+        "channelId": "your-channel-id",
+        "idStoragePath": "status/teams_machine_ids.json"
+      }
     },
     "events": {
-      "onStart": true,
-      "onStepComplete": true,
-      "onError": true,
-      "onComplete": true
-    },
-    "messageFormat": {
-      "success": "✅ {stepName} が完了しました",
-      "error": "❌ {stepName} でエラーが発生しました: {errorMessage}",
-      "start": "🚀 ワークフロー '{workflowName}' を開始しました"
+      "onWorkflowStart": {
+        "enabled": true,
+        "message": "🚀 Windows Kitting Workflow開始: {machineName}でWindows 11セットアップを開始しました\n\n📋 実行予定のワークフロー:\n{workflowSteps}"
+      },
+      "onStepComplete": { "enabled": true },
+      "onError": { "enabled": true },
+      "onWorkflowComplete": { "enabled": true }
     }
   }
 }
 ```
+
+#### 初回通知のタイミング
+
+- 初回通知（`onWorkflowStart`）は `scripts/setup/initialize.ps1` 実行時に送信されます。
+- `machineName` は `config/machine_list.csv` の該当行があればその値を優先し、無い場合は `$env:COMPUTERNAME` が使われます。
+- ステータスファイル:
+  - `status/workflow-started.completed`
+  - `status/workflow-initial-start.json`
 
 ### Slack Webhook設定
 

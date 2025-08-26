@@ -47,14 +47,17 @@ $configPath = "config\notifications.json"
 Import-NotificationConfig -ConfigPath $configPath
 ```
 
-### 3. 通知の送信
+### 3. 通知の送信（統合インターフェース）
 
 ```powershell
-# 基本的な通知送信
-Send-Notification -Message "設定が完了しました" -Title "BitLocker設定"
+# イベント種別を指定して送信（notifications.json のテンプレートを使用）
+Send-Notification -EventType "onWorkflowComplete" -Variables @{
+    totalDuration   = "00:12:34"
+    sessionDuration = "00:12:34"
+}
 
-# 詳細オプション付き通知
-Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -Level "INFO" -RequiresUserAction $false
+# 任意のカスタムメッセージを送る（テンプレートを使わない）
+Send-Notification -EventType "onWorkflowStart" -CustomMessage "🚀 セットアップを開始しました"
 ```
 
 ## 📋 提供される関数
@@ -66,6 +69,8 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
 | `Import-NotificationConfig` | 通知設定ファイルを読み込み |
 | `Send-Notification` | 統合通知送信（Slack/Teams/TTS対応） |
 | `Get-PCSerialNumber` | PCシリアル番号取得 |
+| `Get-PreferredMachineName` | CSVの `machine_list.csv` からPC名を解決（無ければ `$env:COMPUTERNAME`） |
+| `Get-OrCreate-MachineId` | Teams用のマシンIDを生成/取得 |
 
 ### Slack Functions
 
@@ -77,7 +82,7 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
 
 | 関数名 | 説明 |
 |--------|------|
-| `Send-TeamsNotification` | Teams専用通知送信（アダプティブカード対応） |
+| `Send-TeamsNotification` | Teams専用通知送信（Power Automate経由・新スレッド化方式） |
 
 ### TTS Functions
 
@@ -138,6 +143,13 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
 }
 ```
 
+### 変数の解決と `machineName` の扱い
+
+- `Send-Notification` 実行時、`Variables.machineName` を明示しない場合でも、内部で自動的に設定されます。
+  - 優先順: `config/machine_list.csv` のシリアル一致行の `Machine Name` → なければ `$env:COMPUTERNAME`。
+  - この解決は `Get-PreferredMachineName` により行われます。`Serial Number` は空白・記号を除去して突合します。
+- `Variables.timestamp` は `yyyy-MM-dd HH:mm:ss` で自動付与されます。
+
 補足:
 - `preferJapanese`: true の場合、`ja-*` の音声があれば優先します。
 - `voiceName`: 特定の音声名を優先選択します（指定時はこちらが優先）。
@@ -163,7 +175,7 @@ Send-Notification -Message $detailMessage -Title "🔐 BitLocker設定完了" -L
 ### MainWorkflow.ps1
 - 古い通知関数群を削除
 - 共通ライブラリの読み込みを追加
-- シンプルなラッパー関数で互換性を維持
+- 初回通知（`onWorkflowStart`）の送信は `initialize.ps1` に移行
 
 ### setup-bitlocker.ps1
 - `Send-BitLockerNotification`関数を削除
@@ -215,3 +227,11 @@ Send-TTSNotification -Message "テスト読み上げです" -ErrorAction Silentl
 - [Teams通知新スレッド化方式ガイド](Teams-Notification-V2-Guide.md)
 - [Slackスレッドガイド](Slack-Thread-Guide.md)
 - [テストガイド](Testing-Guide.md)
+
+## 仕様補足: 初回通知のタイミングとステータスファイル
+
+- 初回通知（`onWorkflowStart`）は `scripts/setup/initialize.ps1` 実行時に送信されます。
+  - ユーザーがダイアログでPC名を修正した場合、CSVへ反映後の最新PC名で通知されます。
+  - 作成されるステータス:
+    - `status/workflow-started.completed`
+    - `status/workflow-initial-start.json`（未存在時のみ作成）

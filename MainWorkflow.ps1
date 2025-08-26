@@ -307,88 +307,6 @@ function Get-PCSerialNumber {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# BIOSパスワード解除確認ダイアログ（初回のみ）
-function Show-BIOSPasswordDialog {
-	Write-Log "BIOSパスワード解除確認を開始中..."
-
-	# ステータスファイルのパス
-	$statusFile = Join-Path $Global:StatusPath "bios-password-confirmed.completed"
-
-	# 既に確認済みの場合はスキップ
-	if (Test-Path $statusFile) {
-		Write-Log "BIOSパスワード解除は既に確認済みです。ダイアログをスキップします。"
-		return $true
-	}
-
-	Write-Log "初回実行のため、BIOSパスワード解除確認ダイアログを表示します。"
-
-	# Windows Formsアセンブリの読み込み
-	Add-Type -AssemblyName System.Windows.Forms
-
-	# メッセージボックスで確認
-	$message = @"
-このPCのBIOSパスワードは既に解除済みですか？
-
-セットアップを開始する前に、以下を確認してください：
-・BIOSパスワードが設定されていないこと
-・セキュアブートの設定が適切に行われていること
-・TPMの設定が正しく構成されていること
-
-準備が完了している場合は「はい」を、
-まだ準備ができていない場合は「いいえ」を選択してください。
-"@
-
-	# シンプルなメッセージボックスを表示
-	$result = [System.Windows.Forms.MessageBox]::Show(
-		$message,
-		"Windows Kitting Workflow - 初回実行確認",
-		[System.Windows.Forms.MessageBoxButtons]::YesNo,
-		[System.Windows.Forms.MessageBoxIcon]::Question,
-		[System.Windows.Forms.MessageBoxDefaultButton]::Button2
-	)
-
-	if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
-		Write-Log "ユーザーがBIOSパスワード解除を確認しました。ワークフローを続行します。"
-
-		# 確認済みステータスファイルを作成
-		try {
-			$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-			$statusContent = @"
-BIOS Password Confirmation Completed
-=====================================
-Confirmed Date: $timestamp
-Computer Name: $env:COMPUTERNAME
-User: $env:USERNAME
-Status: Confirmed by user dialog
-"@
-			[System.IO.File]::WriteAllText($statusFile, $statusContent, [System.Text.Encoding]::UTF8)
-			Write-Log "BIOSパスワード確認完了ステータスファイルを作成しました: $statusFile"
-		}
-		catch {
-			Write-Log "ステータスファイルの作成に失敗しました: $($_.Exception.Message)" -Level "WARN"
-		}
-
-		return $true
-	}
-	else {
-		Write-Log "ユーザーがセットアップのキャンセルを選択しました。プログラムを終了します。"
-		return $false
-	}
-}
-
 # 完了チェック
 function Resolve-CompletionMarkerPath {
 	param(
@@ -679,51 +597,6 @@ function Test-StepDependencies {
 	return $true
 }
 
-# ワークフローステップリストを生成する関数
-function Get-WorkflowStepsMessage {
-	try {
-		if (-not $Global:WorkflowConfig -or -not $Global:WorkflowConfig.workflow.steps) {
-			return "• ワークフロー設定が読み込まれていません"
-		}
-
-		$steps = $Global:WorkflowConfig.workflow.steps
-		$stepsList = @()
-
-		foreach ($step in $steps) {
-			$stepName = $step.name
-			$additionalInfo = @()
-
-			# 再起動が必要な場合の表示
-			if ($step.rebootRequired -eq $true) {
-				$additionalInfo += "再起動あり"
-			}
-
-			# 初回のみ実行される項目の表示
-			if ($step.id -eq "bios-password-confirmation") {
-				$additionalInfo += "初回のみ"
-			}
-
-			# エラー時の動作を表示
-			if ($step.onError -eq "continue") {
-				$additionalInfo += "エラー時継続"
-			}
-
-			# 追加情報がある場合は括弧内に表示
-			if ($additionalInfo.Count -gt 0) {
-				$stepName += "（" + ($additionalInfo -join "、") + "）"
-			}
-
-			$stepsList += "- $stepName"
-		}
-
-		return $stepsList -join "`n"
-	}
-	catch {
-		Write-Log "ワークフローステップメッセージ生成でエラーが発生しました: $($_.Exception.Message)" -Level "WARN"
-		return "- ワークフローステップの取得に失敗しました"
-	}
-}
-
 # メインワークフロー実行
 function Start-MainWorkflow {
 	try {
@@ -775,34 +648,9 @@ function Start-MainWorkflow {
 			}
 		}
 
-		# 初回起動時のみ開始通知を送信
+		# 初回起動時の開始通知は initialize.ps1 側で送信します
 		if ($isFirstRun) {
-			$workflowSteps = Get-WorkflowStepsMessage
-			$null = Send-Notification -EventType "onWorkflowStart" -Variables @{
-				workflowSteps = $workflowSteps
-			}
-			Start-Sleep -Seconds 5
-
-			# ワークフロー開始ステータスファイルを作成
-			try {
-				if (-not (Test-Path $Global:StatusPath)) {
-					New-Item -ItemType Directory -Path $Global:StatusPath -Force | Out-Null
-				}
-				$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-				$statusContent = @"
-Workflow Start Notification Sent
-=================================
-First Run Date: $timestamp
-Computer Name: $env:COMPUTERNAME
-User: $env:USERNAME
-Status: Initial workflow start notification sent
-"@
-				[System.IO.File]::WriteAllText($workflowStartStatusFile, $statusContent, [System.Text.Encoding]::UTF8)
-				Write-Log "ワークフロー開始通知ステータスファイルを作成しました: $workflowStartStatusFile"
-			}
-			catch {
-				Write-Log "ワークフロー開始ステータスファイルの作成に失敗しました: $($_.Exception.Message)" -Level "WARN"
-			}
+			Write-Log "初回起動: 開始通知は initialize.ps1 側で送信します" -Level "INFO"
 		}
 		else {
 			Write-Log "再起動後の継続実行のため、開始通知をスキップします。"

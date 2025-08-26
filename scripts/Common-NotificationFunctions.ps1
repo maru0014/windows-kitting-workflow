@@ -530,7 +530,9 @@ function Send-Notification {
 		}
 
 		# 変数の置換
-		$Variables.machineName = $env:COMPUTERNAME
+		if (-not $Variables.ContainsKey("machineName") -or [string]::IsNullOrWhiteSpace($Variables.machineName)) {
+			$Variables.machineName = Get-PreferredMachineName
+		}
 		$Variables.timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
 		foreach ($key in $Variables.Keys) {
@@ -567,6 +569,35 @@ function Send-Notification {
 		Write-Warning "通知送信でエラーが発生しました: $($_.Exception.Message)"
 		return $false
 	}
+}
+
+# CSV から推奨PC名を解決（該当なし・エラー時は現在のコンピューター名）
+function Get-PreferredMachineName {
+	try {
+		$serial = Get-PCSerialNumber
+		if ([string]::IsNullOrWhiteSpace($serial)) { return $env:COMPUTERNAME }
+
+		# 比較用にシリアルを正規化（空白/記号を除去）
+		$normalizedSerial = $serial -replace '\s+', '' -replace '[^\w]', ''
+
+		$csvPath = Join-Path (Split-Path $PSScriptRoot -Parent) "config\machine_list.csv"
+		if (-not (Test-Path $csvPath)) { return $env:COMPUTERNAME }
+
+		$rows = Import-Csv -Path $csvPath
+		$matched = $rows |
+		Where-Object {
+			$csvSerial = ($_.'Serial Number')
+			if ($null -eq $csvSerial) { return $false }
+			$csvNormalized = ([string]$csvSerial) -replace '\s+', '' -replace '[^\w]', ''
+			return $csvNormalized -eq $normalizedSerial
+		}
+
+		if ($matched -and -not [string]::IsNullOrWhiteSpace($matched.'Machine Name')) {
+			return [string]$matched.'Machine Name'
+		}
+		return $env:COMPUTERNAME
+	}
+	catch { return $env:COMPUTERNAME }
 }
 
 # マシンIDクリア関数（テスト用）
