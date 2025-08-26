@@ -96,7 +96,8 @@ function Get-BitLockerStatus {
 # BitLockerポリシー設定（PIN使用時）
 function Set-BitLockerPolicy {
 	param(
-		[bool]$EnablePIN = $false
+		[bool]$EnablePIN = $false,
+		[int]$MinimumPINLength = 4
 	)
 
 	try {
@@ -120,6 +121,11 @@ function Set-BitLockerPolicy {
 			New-ItemProperty -LiteralPath $registryPath -Name "UseTPMPIN" -PropertyType "DWord" -Value "2" -Force | Out-Null
 			# スタートアップの拡張 PIN を許可する
 			New-ItemProperty -LiteralPath $registryPath -Name "UseEnhancedPin" -PropertyType "DWord" -Value "1" -Force | Out-Null
+			# 最小PIN長を必要に応じて設定
+			if ($MinimumPINLength -gt 0) {
+				New-ItemProperty -LiteralPath $registryPath -Name "MinimumPIN" -PropertyType "DWord" -Value $MinimumPINLength -Force | Out-Null
+				Write-Log "✅ 最小PIN長を $MinimumPINLength 桁に設定しました"
+			}
 			Write-Log "✅ BitLocker PIN使用ポリシーを設定しました"
 		}
 
@@ -212,7 +218,12 @@ function Enable-BitLockerEncryption {
 		$recoveryKeyFile = Join-Path $recoveryKeyPath "bitlocker-recovery-key-$timestamp.txt"
 
 		# BitLockerポリシー設定
-		if (-not (Set-BitLockerPolicy -EnablePIN $UsePIN)) {
+		$minPinLenToSet = 0
+		if ($UsePIN -and -not [string]::IsNullOrEmpty($PIN)) {
+			$minPinLenToSet = $PIN.Length
+			Write-Log "要求されたPIN長: $minPinLenToSet"
+		}
+		if (-not (Set-BitLockerPolicy -EnablePIN $UsePIN -MinimumPINLength $minPinLenToSet)) {
 			Write-Log "BitLockerポリシー設定に失敗しました" -Level "ERROR"
 			return $false
 		}
