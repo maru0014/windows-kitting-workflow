@@ -2,7 +2,7 @@
 
 ## 概要
 `AutoLogin.ps1`スクリプトは、Windows の自動ログイン機能を管理します。
-`workflow.json`のパラメータでユーザーID/パスワードを事前設定できます。パスワードの扱いは次の通りです。
+`workflow.json`のパラメータ、または `ConfigPath` で指定した JSON（例: `config/local_user.json`）からユーザーID/パスワードを設定できます。優先順位は「引数/parameters が最優先 → JSON（ConfigPath）」。パスワードの扱いは次の通りです。
 
 - 未指定（パラメーターを省略）: 実行時にプロンプトで入力（2回確認）
 - 空文字（`""` を明示指定）: パスワードなしで設定（警告ログを出力）
@@ -10,7 +10,7 @@
 
 ## 設定方法
 
-### workflow.jsonでの設定
+### workflow.jsonでの設定（ConfigPath対応）
 
 `config/workflow.json`の`autologin-setup`ステップでパラメータを設定できます：
 
@@ -25,9 +25,10 @@
   "parameters": {
     "Action": "Setup",
     "Force": true,
-    "Username": "Administrator",
-    "Password": "YourPassword",
-    "Domain": "WORKGROUP"
+    "ConfigPath": "config/local_user.json",
+    "Username": "",
+    "Password": "",
+    "Domain": ""
   }
 }
 ```
@@ -56,7 +57,7 @@
 1. `workflow.json`で`Password`を省略する（またはコマンドラインで指定しない）
 2. スクリプト実行時にパスワード入力（2回確認）が求められる
 
-### 3. コマンドライン引数での指定
+### 3. コマンドライン引数での指定（ConfigPathでJSON補完）
 ```powershell
 # パスワード未指定（プロンプトで入力）
 .\AutoLogin.ps1 -Action Setup -Username "user" -Domain "domain"
@@ -66,9 +67,12 @@
 
 # パスワードなしで設定（警告ログが出ます）
 .\AutoLogin.ps1 -Action Setup -Username "user" -Password "" -Domain "domain"
+
+# JSON から補完（引数未指定の項目のみ）
+.\AutoLogin.ps1 -Action Setup -ConfigPath config\local_user.json -Force
 ```
 
-### 4. workflow.json での空文字/未指定の扱い
+### 4. workflow.json での空文字/未指定/ConfigPath の扱い
 
 ```json
 {
@@ -80,8 +84,9 @@
   "parameters": {
     "Action": "Setup",
     "Force": true,
-    "Username": "Administrator",
-    "Domain": "WORKGROUP"
+    "ConfigPath": "config/local_user.json",
+    "Username": "",
+    "Domain": ""
     // Password を省略すると、実行時にプロンプトで入力されます
   }
 }
@@ -124,7 +129,11 @@
 
 ## 変更履歴
 
-### v2.1 (最新)
+### v2.2 (最新)
+- `ConfigPath` から `local_user.json` を読み取り、引数未指定項目の補完に対応
+- 優先順位: 引数/parameters > JSON(ConfigPath)
+
+### v2.1
 - `-Password` の扱いを明確化（未指定: プロンプト、空文字: パスワードなし＋警告）
 - コマンド例と workflow.json 設定例を更新
 

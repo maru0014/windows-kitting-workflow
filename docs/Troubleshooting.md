@@ -50,6 +50,13 @@ Get-ExecutionPolicy -List
    - Windows Defenderの設定でスクリプトの実行を許可
    - フォルダを除外リストに追加
 
+4. **認証情報の未設定**
+   - `TaskScheduler.ps1` は `-ConfigPath` で `config/local_user.json` などの JSON を指定すると、未指定の `Username` のみ補完します（Password は読み込みません）
+   ```powershell
+   # JSON からユーザー名のみ補完して登録（Password は明示指定または不要）
+   .\TaskScheduler.ps1 -Action Register -ConfigPath config\local_user.json -Force
+   ```
+
 **手動でのタスク確認**:
 ```powershell
 # タスクスケジューラの確認

@@ -3,7 +3,7 @@ param(
 	[string]$UserName = "",
 	[string]$Password = "",
 	[string[]]$Groups = @("Administrators"),
-	[string]$ConfigPath = "config\machine_list.csv",
+	[string]$ConfigPath = "config\local_user.json",
 	[switch]$Help
 )
 
@@ -32,13 +32,12 @@ if ($Help) {
     .\create-user.ps1 [-UserName <name>] [-Password <password>] [-Groups <g1,g2,...>] [-ConfigPath <path>]
 
 挙動:
-    - 引数に UserName/Password が渡された場合はそれを優先してユーザーを作成/更新
-    - 未指定の場合は PC のシリアル番号に基づき machine_list.csv を参照し、
-      対応する "User Name" と "User Password" でユーザーを作成/更新
-    - Groups パラメータで指定されたローカルグループへ追加（既定: Administrators）
+    - 引数で UserName / Password / Groups が指定された場合は最優先
+    - それ以外の場合は local_user.json（ConfigPath）を参照
+    - いずれも無い場合はエラーで終了
 
 例:
-    # CSV に従って作成
+    # JSON に従って作成
     .\create-user.ps1
 
     # 直接指定して作成
@@ -111,35 +110,34 @@ function Resolve-UserCredential {
 	param(
 		[string]$ParamUserName,
 		[string]$ParamPassword,
-		[string]$CsvPath
+		[string]$JsonPath
 	)
 
 	if (-not [string]::IsNullOrWhiteSpace($ParamUserName) -and -not [string]::IsNullOrWhiteSpace($ParamPassword)) {
 		return [PSCustomObject]@{ UserName = $ParamUserName; Password = $ParamPassword; Source = "Parameter" }
 	}
 
-	$serial = Get-SerialNumber
-	if (-not $serial) {
-		Write-Log "シリアル番号が取得できないため、CSV 参照をスキップします" -Level "WARN"
+	try {
+		if (-not (Test-Path $JsonPath)) {
+			Write-Log "ユーザー設定ファイルが見つかりません: $JsonPath" -Level "WARN"
+			return $null
+		}
+
+		$json = Get-Content -Path $JsonPath -Raw | ConvertFrom-Json
+		$jsonUser = $json.UserName
+		$jsonPass = $json.Password
+
+		if ([string]::IsNullOrWhiteSpace($jsonUser) -or [string]::IsNullOrWhiteSpace($jsonPass)) {
+			Write-Log "local_user.json にユーザー名またはパスワードが定義されていません" -Level "WARN"
+			return $null
+		}
+
+		return [PSCustomObject]@{ UserName = $jsonUser; Password = $jsonPass; Source = "JSON" }
+	}
+	catch {
+		Write-Log "local_user.json の読み込み/解析に失敗しました: $($_.Exception.Message)" -Level "ERROR"
 		return $null
 	}
-	Write-Log "現在のシリアル番号: $serial"
-
-	$list = Import-MachineList -CsvPath $CsvPath
-	if (-not $list) { Write-Log "機器リストの読み込みに失敗したためスキップします" -Level "WARN"; return $null }
-
-	$machine = Find-MachineBySerial -MachineList $list -SerialNumber $serial
-	if (-not $machine) { Write-Log "シリアル '$serial' に一致する行が見つからないためスキップします" -Level "WARN"; return $null }
-
-	$csvUser = $machine."User Name"
-	$csvPass = $machine."User Password"
-
-	if ([string]::IsNullOrWhiteSpace($csvUser) -or [string]::IsNullOrWhiteSpace($csvPass)) {
-		Write-Log "CSV にユーザー名またはパスワードが空のためスキップします (Serial: $serial)" -Level "WARN"
-		return $null
-	}
-
-	return [PSCustomObject]@{ UserName = $csvUser; Password = $csvPass; Source = "CSV" }
 }
 
 function Set-LocalUserAccount {
@@ -236,13 +234,11 @@ try {
 	$workflowRoot = Get-WorkflowRoot
 	$fullConfigPath = if ([System.IO.Path]::IsPathRooted($ConfigPath)) { $ConfigPath } else { Join-Path $workflowRoot $ConfigPath }
 
-	# 資格情報の決定（引数優先 → CSV）
-	$cred = Resolve-UserCredential -ParamUserName $UserName -ParamPassword $Password -CsvPath $fullConfigPath
+	# 資格情報の決定（引数優先 → local_user.json）
+	$cred = Resolve-UserCredential -ParamUserName $UserName -ParamPassword $Password -JsonPath $fullConfigPath
 	if (-not $cred) {
-		Write-Log "ユーザー情報が見つからなかったためスキップします" -Level "WARN"
-		# 完了マーカーはMainWorkflow側で作成されます（詳細はログ/通知をご確認ください）
-		Write-Log "=== ユーザー作成処理スキップ ==="
-		exit 0
+		Write-Log "ユーザー情報が見つからないためエラーで終了します（引数または local_user.json を指定してください）" -Level "ERROR"
+		exit 1
 	}
 	Write-Log "資格情報ソース: $($cred.Source)"
 	Write-Log "対象ユーザー: $($cred.UserName)"
@@ -258,10 +254,28 @@ try {
 	$userOk = Set-LocalUserAccount -Name $cred.UserName -Password $secure
 	if (-not $userOk) { Write-Log "ユーザーの作成/更新に失敗しました" -Level "ERROR"; exit 1 }
 
-	# グループ追加（重複排除）
+	# グループ決定（引数優先 → local_user.json、無ければエラー）
+	$jsonForGroups = $null
+	try {
+		if (-not $PSBoundParameters.ContainsKey("Groups") -and (Test-Path $fullConfigPath)) {
+			$jsonForGroups = Get-Content -Path $fullConfigPath -Raw | ConvertFrom-Json
+		}
+	}
+	catch { Write-Log "local_user.json の読み込み/解析に失敗しました（Groups判定）: $($_.Exception.Message)" -Level "WARN" }
+
 	$targetGroups = @()
-	if ($Groups -and $Groups.Count -gt 0) { $targetGroups = $Groups | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique }
-	if ($targetGroups.Count -eq 0) { $targetGroups = @("Administrators") }
+	if ($PSBoundParameters.ContainsKey("Groups") -and $Groups -and $Groups.Count -gt 0) {
+		$targetGroups = $Groups | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+		Write-Log "グループソース: Parameter"
+	}
+	elseif ($jsonForGroups -and $jsonForGroups.Groups -and $jsonForGroups.Groups.Count -gt 0) {
+		$targetGroups = @($jsonForGroups.Groups) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+		Write-Log "グループソース: JSON"
+	}
+	else {
+		Write-Log "グループが指定されていません（引数または local_user.json の Groups を指定してください）" -Level "ERROR"
+		exit 1
+	}
 
 	$groupOk = Add-UserToGroups -UserName $cred.UserName -TargetGroups $targetGroups
 	if (-not $groupOk) { Write-Log "一部グループへの追加に失敗しました" -Level "WARN" }

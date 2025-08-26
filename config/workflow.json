@@ -12,27 +12,6 @@
     },
     "steps": [
       {
-        "id": "bios-password-confirmation",
-        "name": "BIOSパスワード解除確認",
-        "description": "初回実行時にBIOSパスワードが解除済みかを確認（初回のみ表示）",
-        "script": "internal",
-        "type": "internal",
-        "runAsAdmin": false,
-        "completionCheck": {
-          "type": "file",
-          "path": "status/bios-password-confirmed.completed"
-        },
-        "timeout": 600,
-        "retryCount": 0,
-        "rebootRequired": false,
-        "dependsOn": [],
-        "onError": "stop",
-        "internal": {
-          "function": "Show-BIOSPasswordDialog",
-          "description": "BIOSパスワード解除確認ダイアログを表示し、ユーザー確認を取得"
-        }
-      },
-      {
         "id": "init",
         "name": "初期化処理",
         "description": "ワークフロー環境の初期化",
@@ -46,7 +25,7 @@
         "timeout": 300,
         "retryCount": 2,
         "rebootRequired": false,
-        "dependsOn": ["bios-password-confirmation"],
+        "dependsOn": [],
         "onError": "stop"
       },
       {
@@ -150,29 +129,6 @@
         "rebootRequired": true,
         "dependsOn": ["enable-admin"],
         "onError": "stop"
-      },
-      {
-        "id": "create-user",
-        "name": "ローカルユーザー作成",
-        "description": "machine_list.csvまたは引数に基づきローカルユーザーを作成し、グループに追加",
-        "script": "scripts/setup/create-user.ps1",
-        "type": "powershell",
-        "runAsAdmin": true,
-        "parameters": {
-          "ConfigPath": "config/machine_list.csv",
-          "UserName": "",
-          "Password": "",
-          "Groups": ["Administrators"]
-        },
-        "completionCheck": {
-          "type": "file",
-          "path": "status/create-user.completed"
-        },
-        "timeout": 180,
-        "retryCount": 1,
-        "rebootRequired": false,
-        "dependsOn": ["rename-computer"],
-        "onError": "continue"
       },
       {
         "id": "import-registry",
@@ -325,6 +281,83 @@
         "retryCount": 1,
         "rebootRequired": false,
         "dependsOn": ["apply-taskbar-layout"],
+        "onError": "continue"
+      },
+      {
+        "id": "create-user",
+        "name": "(利用者)ローカルユーザー作成",
+        "description": "引数またはlocal_user.jsonに基づきローカルユーザーを作成し、グループに追加（引数が最優先、次点でJSON。いずれも無ければエラー）",
+        "script": "scripts/setup/create-user.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "ConfigPath": "config/local_user.json"
+        },
+        "completionCheck": {
+          "type": "file"
+        },
+        "timeout": 180,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": [],
+        "onError": "continue"
+      },
+      {
+        "id": "autologin-setup-user",
+        "name": "(利用者)自動ログイン設定",
+        "description": "セットアップ期間中の自動ログイン設定（workflow.jsonのパラメータまたは対話入力で設定）",
+        "script": "AutoLogin.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "ConfigPath": "config/local_user.json",
+          "Action": "Setup",
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file"
+        },
+        "timeout": 120,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": ["create-user"],
+        "onError": "stop"
+      },
+      {
+        "id": "task-scheduler-setup-user",
+        "name": "(利用者)タスクスケジューラ登録",
+        "description": "メインワークフローのタスクスケジューラ登録",
+        "script": "TaskScheduler.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "parameters": {
+          "ConfigPath": "config/local_user.json",
+          "Action": "Register",
+          "Force": true
+        },
+        "completionCheck": {
+          "type": "file"
+        },
+        "timeout": 120,
+        "retryCount": 1,
+        "rebootRequired": true,
+        "dependsOn": ["create-user"],
+        "onError": "stop"
+      },
+      {
+        "id": "import-registry-user",
+        "name": "レジストリ設定インポート",
+        "description": ".regファイルの一括インポートとシステム設定の最適化",
+        "script": "scripts/setup/import-registry.ps1",
+        "type": "powershell",
+        "runAsAdmin": true,
+        "completionCheck": {
+          "type": "file"
+        },
+        "timeout": 600,
+        "retryCount": 1,
+        "rebootRequired": false,
+        "dependsOn": ["create-user"],
         "onError": "continue"
       },
       {

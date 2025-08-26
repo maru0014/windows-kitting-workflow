@@ -13,6 +13,8 @@ param(
 
 	[string]$Password,
 
+	[string]$ConfigPath = "",
+
 	[switch]$Force
 )
 
@@ -274,6 +276,27 @@ try {
 	# アクションに応じて処理実行
 	switch ($Action) {
 		"Register" {
+			# ConfigPath が指定されている場合、JSON から未指定項目を補完
+			if ($ConfigPath) {
+				try {
+					$workflowRoot = $PSScriptRoot
+					$fullConfigPath = if ([System.IO.Path]::IsPathRooted($ConfigPath)) { $ConfigPath } else { Join-Path $workflowRoot $ConfigPath }
+					if (Test-Path $fullConfigPath) {
+						$json = Get-Content -Path $fullConfigPath -Raw | ConvertFrom-Json
+						if (-not $Username -and $json.UserName) {
+							$Username = [string]$json.UserName
+							Write-Log "ユーザー名をConfigPathから取得: $Username"
+						}
+					}
+					else {
+						Write-Log "指定されたConfigPathが見つかりません: $fullConfigPath" -Level "WARN"
+					}
+				}
+				catch {
+					Write-Log "ConfigPath の読み込みに失敗しました: $($_.Exception.Message)" -Level "WARN"
+				}
+			}
+
 			if (-not $Force) {
 				Write-Log "タスクスケジューラにタスクを登録します"
 				$confirmation = Read-Host "続行しますか？ (y/N)"

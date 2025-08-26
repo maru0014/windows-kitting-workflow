@@ -19,7 +19,7 @@
 4. **[Wi-Fi設定ガイド](Wi-Fi-Configuration-Guide.md)** - Wi-Fi自動設定
 5. **[スタートアップアプリ無効化ガイド](disable_startup_apps_guide.md)** - 指定名のスタートアップ登録を無効化
 6. **[ローカルユーザー削除ガイド](remove_user_guide.md)** - ローカルユーザーとプロファイルの削除
-7. **[ローカルユーザー作成ガイド](create-user-guide.md)** - CSV/引数からユーザー作成とグループ追加
+7. **[ローカルユーザー作成ガイド](create-user-guide.md)** - 引数/JSONからユーザー作成とグループ追加
 
 ### 🔔 通知機能を設定したい方
 1. **[共通通知ライブラリ](Common-Notification-Library.md)** - 通知機能の共通化実装

@@ -14,6 +14,8 @@ param(
 
 	[string]$Domain = "",
 
+	[string]$ConfigPath = "",
+
 	[switch]$Force
 )
 
@@ -316,6 +318,31 @@ try {
 		"Setup" {
 			# パラメータの確認
 			Write-Log "自動ログイン設定のパラメータを確認します"
+			# ConfigPath が指定されている場合、JSON から未指定項目を補完
+			if ($ConfigPath) {
+				try {
+					$workflowRoot = $PSScriptRoot
+					$fullConfigPath = if ([System.IO.Path]::IsPathRooted($ConfigPath)) { $ConfigPath } else { Join-Path $workflowRoot $ConfigPath }
+					if (Test-Path $fullConfigPath) {
+						$json = Get-Content -Path $fullConfigPath -Raw | ConvertFrom-Json
+						if (-not $Username -and $json.UserName) {
+							$Username = [string]$json.UserName
+							Write-Log "ユーザー名をConfigPathから取得: $Username"
+						}
+						if (-not $PSBoundParameters.ContainsKey('Password') -and $null -ne $json.Password) {
+							$Password = [string]$json.Password
+							$PSBoundParameters['Password'] = $Password
+							Write-Log "パスワードをConfigPathから取得"
+						}
+					}
+					else {
+						Write-Log "指定されたConfigPathが見つかりません: $fullConfigPath" -Level "WARN"
+					}
+				}
+				catch {
+					Write-Log "ConfigPath の読み込みに失敗しました: $($_.Exception.Message)" -Level "WARN"
+				}
+			}
 			if ($Username) {
 				Write-Log "ユーザー名が指定されています: $Username"
 			}

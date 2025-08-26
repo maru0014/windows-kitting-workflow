@@ -1,46 +1,53 @@
 # ローカルユーザー作成ガイド（create-user.ps1）
 
-このガイドでは、`scripts/setup/create-user.ps1` を用いて、PC のシリアル番号に紐づく `config/machine_list.csv` からユーザーを自動作成する方法、または引数で直接ユーザー名・パスワードを指定して作成する方法を説明します。ユーザーは指定グループに追加され、デフォルトでは `Administrators` に追加されます。
+このガイドでは、`scripts/setup/create-user.ps1` を用いて、引数で直接指定するか、`config/local_user.json` からユーザー情報を読み取ってローカルユーザーを作成/更新する方法を説明します。グループは引数または JSON で指定してください（どちらも無い場合はエラー）。
 
 ## 前提条件
 - 管理者権限で実行すること
-- `config/machine_list.csv` に以下の列があること:
-  - `Serial Number`, `Machine Name`, `User Name`, `User Password`, `Office License Type`, `Office Product Key`
 - `scripts/Common-LogFunctions.ps1`, `scripts/Common-WorkflowHelpers.ps1` が存在すること
+ - `config/local_user.json` が存在する場合は次の形式:
+   ```json
+   {
+     "UserName": "User001",
+     "Password": "User1234",
+     "Groups": ["Administrators"]
+   }
+   ```
 
 ## 使い方
 
-### 1) CSV 参照で自動作成（推奨）
-PC のシリアル番号に一致する行から `User Name` と `User Password` を読み取り、ユーザーを作成/更新します。
+### 1) JSON 参照で自動作成（推奨）
+`config/local_user.json` から `UserName`/`Password`/`Groups` を読み取り、ユーザーを作成/更新します（引数未指定項目のみ補完）。
 
 ```bash
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1
 ```
 
-### 2) 引数で直接指定（引数が優先）
-`-UserName` と `-Password` を渡した場合、CSV ではなく引数の値で作成/更新します。
+### 2) 引数で直接指定（引数が最優先）
+`-UserName` と `-Password`、必要に応じて `-Groups` を渡した場合、JSON よりも引数の値が最優先されます。
 
 ```bash
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -UserName "user001" -Password "User1234"
 ```
 
-### 3) グループ追加
-`-Groups` でローカルグループを配列で指定できます。デフォルトは `Administrators`。`Administrator` 単数指定は自動で `Administrators` に正規化されます。
+### 3) グループ指定
+グループは必須です。`-Groups`（引数）または `local_user.json` の `Groups` で指定してください。`Administrator` 単数指定は自動で `Administrators` に正規化されます。どちらにも無い場合はエラー終了します。
 
 ```bash
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -UserName "user001" -Password "User1234" -Groups "Administrators","Users"
 ```
 
-### 4) CSV パスの変更
-別の CSV を使う場合は `-ConfigPath` を指定してください（相対パスはワークフローのルート起点で解決）。
+### 4) JSON パスの変更
+別の JSON を使う場合は `-ConfigPath` を指定してください（相対パスはワークフローのルート起点で解決）。
 
 ```bash
-pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -ConfigPath "config\\machine_list.csv"
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -ConfigPath "config\\local_user.json"
 ```
 
 ## 動作仕様
-- 引数 `UserName`/`Password` が両方渡された場合に限り、引数を優先
-- 引数未指定時は `machine_list.csv` からシリアル番号一致行を検索して利用
+- 引数 `UserName`/`Password`/`Groups` が指定された項目は最優先で使用
+- 未指定の項目は `local_user.json` から補完
+- 引数・JSON のいずれにも必要項目が無い場合はエラー終了
 - 既存ユーザーが存在する場合は有効化し、パスワードを更新
 - 指定グループに既に所属している場合はスキップ
 - 完了判定は MainWorkflow が `status/{id}.completed`（既定: `status/create-user.completed`）を作成します
@@ -49,7 +56,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -C
 
 ## エラーハンドリング
 - 管理者権限でない場合はエラー終了
-- シリアル番号取得不可、CSV 未読込、対象行なし、ユーザー/パスワード空欄などはエラー終了
+- JSON 未読込、ユーザー/パスワード/グループ未指定時はエラー終了
 - グループが存在しない場合は該当グループのみ警告し、他を継続
 
 ## ワークフロー統合
@@ -59,12 +66,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -C
 {
   "id": "create-user",
   "name": "ローカルユーザー作成",
-  "description": "machine_list.csvまたは引数に基づきローカルユーザーを作成し、グループに追加",
+  "description": "引数またはlocal_user.jsonに基づきローカルユーザーを作成し、グループに追加（引数が最優先、次点でJSON。いずれも無ければエラー）",
   "script": "scripts/setup/create-user.ps1",
   "type": "powershell",
   "runAsAdmin": true,
   "parameters": {
-    "ConfigPath": "config/machine_list.csv",
+    "ConfigPath": "config/local_user.json",
     "UserName": "",
     "Password": "",
     "Groups": ["Administrators"]
@@ -81,8 +88,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup\create-user.ps1 -C
 ```
 
 ## セキュリティ注意
-- コマンドライン引数にパスワードを渡す場合は履歴やログに残る可能性があります。可能であれば CSV 運用または別の安全な資格情報管理方法をご検討ください。
+- コマンドライン引数にパスワードを渡す場合は履歴やログに残る可能性があります。可能であれば JSON 運用または別の安全な資格情報管理方法をご検討ください。
 - スクリプト内部ではパスワードを `SecureString` に変換してから `New-LocalUser`/`Set-LocalUser` に渡しています。
 
 ---
-最終更新: 2025-08-26（完了マーカー集中管理に対応）
+最終更新: 2025-08-26（JSON優先ロジックに変更、グループ指定必須化）
