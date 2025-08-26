@@ -160,14 +160,8 @@ function Set-AutoLogin {
 		Set-ItemProperty -Path $regPath -Name "AutoLogonCount" -Value $autoLogonCount -Type DWord
 
 		Write-Log "自動ログイン設定が完了しました"
-
-		# 完了マーカー作成
-		$completionMarker = Join-Path $PSScriptRoot "status\autologin-setup.completed"
-		@{
-			username  = $Username
-			domain    = $Domain
-			setupTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-		} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+		# 完了マーカーは MainWorkflow 側で作成されます
+		Write-Log "自動ログイン設定完了（マーカーはMainWorkflowが作成）"
 
 		return $true
 
@@ -243,12 +237,8 @@ function Remove-AutoLogin {
 		}
 
 		Write-Log "自動ログイン設定を削除しました"
-
-		# 完了マーカー作成
-		$completionMarker = Join-Path $PSScriptRoot "status\autologin-cleanup.completed"
-		@{
-			removedTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-		} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+		# 完了マーカーは MainWorkflow 側で作成されます
+		Write-Log "自動ログイン解除完了（マーカーはMainWorkflowが作成）"
 
 		return $true
 

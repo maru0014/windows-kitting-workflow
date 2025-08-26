@@ -124,3 +124,69 @@ function Get-CompletionMarkerPath {
 
     return Get-WorkflowPath -PathType "Status" -SubPath "${TaskName}.completed"
 }
+
+# パステンプレートのプレースホルダを展開する関数
+# 使用可能なトークン:
+#  - {id} / {stepId}           : ステップID
+#  - {timestamp}               : yyyyMMdd-HHmmssfff 形式の現在時刻
+#  - {param:Name}              : ステップ引数 (parameters.Name) の値
+function Expand-PathPlaceholders {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Template,
+
+        [Parameter(Mandatory = $true)]
+        [object]$Step
+    )
+
+    $result = $Template
+
+    # ステップID
+    if ($Step -and $Step.id) {
+        $result = $result -replace '\{id\}', [Regex]::Escape($Step.id).Replace('\\', '\\')
+        $result = $result -replace '\{stepId\}', [Regex]::Escape($Step.id).Replace('\\', '\\')
+    }
+
+    # タイムスタンプ
+    $timestamp = (Get-Date -Format 'yyyyMMdd-HHmmssfff')
+    $result = $result -replace '\{timestamp\}', $timestamp
+
+    # parameters の展開 {param:Name}
+    $result = [regex]::Replace($result, '\{param:([^}]+)\}', {
+        param($m)
+        $paramName = $m.Groups[1].Value
+        try {
+            if ($Step -and $Step.parameters -and $Step.parameters.PSObject.Properties[$paramName]) {
+                return [string]$Step.parameters.$paramName
+            }
+            else {
+                return ''
+            }
+        }
+        catch {
+            return ''
+        }
+    })
+
+    return $result
+}
+
+# 完了詳細情報を書き出すユーティリティ
+function Write-CompletionDetail {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$StepId,
+
+        [Parameter(Mandatory = $true)]
+        [object]$Data
+    )
+
+    $detailsDir = Get-WorkflowPath -PathType "Status" -SubPath "details"
+    if (-not (Test-Path $detailsDir)) {
+        New-Item -ItemType Directory -Path $detailsDir -Force | Out-Null
+    }
+
+    $detailsPath = Join-Path $detailsDir ("{0}.json" -f $StepId)
+    $Data | ConvertTo-Json -Depth 5 | Out-File -FilePath $detailsPath -Encoding UTF8
+    return $detailsPath
+}

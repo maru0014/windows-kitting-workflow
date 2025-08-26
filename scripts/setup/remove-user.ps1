@@ -227,15 +227,7 @@ try {
 	}
 
 	# 完了マーカー
-	$markerName = "remove-user-$($UserName.ToLower()).completed"
-	$completionMarker = Get-CompletionMarkerPath -TaskName $markerName
-	@{
-		completedAt    = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-		userName       = $UserName
-		userRemoved    = $userRemoved
-		profileRemoved = $profileRemoved
-		forced         = [bool]$Force
-	} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+	Write-Log "ユーザー削除処理の完了（マーカーはMainWorkflowが作成）"
 
 	Write-Log "ユーザー削除処理が完了しました (UserRemoved=$userRemoved, ProfileRemoved=$profileRemoved)"
 	if ($userRemoved -or $profileRemoved) { exit 0 } else { exit 1 }

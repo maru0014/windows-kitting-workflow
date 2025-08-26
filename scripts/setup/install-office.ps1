@@ -202,32 +202,15 @@ function Invoke-OdtConfigure {
 }
 
 function New-CompletionFlag {
-    param(
-        [string]$SerialNumber,
-        [string]$MachineName,
-        [string]$LicenseType,
-        [string]$InstallerPath,
-        [string]$MaskedKey
-    )
-
-    $statusDir = Get-WorkflowPath -PathType "Status"
-    if (-not (Test-Path $statusDir)) {
-        New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-    }
-
-    $flagFile = Join-Path $statusDir "install-office.completed"
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $content = @"
-Officeインストール完了
-実行時刻: $timestamp
-対象PC名: $MachineName
-シリアル番号: $SerialNumber
-ライセンスタイプ: $LicenseType
-使用インストーラ: $InstallerPath
-Office Product Key (masked): $MaskedKey
-"@
-    Set-Content -Path $flagFile -Value $content -Encoding UTF8
-    Write-Log "完了フラグファイルを作成しました: $flagFile"
+	param(
+		[string]$SerialNumber,
+		[string]$MachineName,
+		[string]$LicenseType,
+		[string]$InstallerPath,
+		[string]$MaskedKey
+	)
+	# 完了マーカーは MainWorkflow 側で作成されます（ここでは詳細ログのみ）
+	Write-Log "Office インストール完了: PC=$MachineName License=$LicenseType Installer=$InstallerPath Key=$MaskedKey"
 }
 
 # メイン処理

@@ -139,16 +139,7 @@ try {
     }
 
     # 完了マーカー
-    $markerName = "disable-startup-apps-$($Name.ToLower())"
-    if ($AllUsers) { $markerName += "-allusers" }
-    $completionMarker = Get-CompletionMarkerPath -TaskName $markerName
-    @{
-        completedAt  = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        name         = $Name
-        allUsers     = [bool]$AllUsers
-        changedCount = ($changed | Measure-Object).Count
-        changes      = $changed
-    } | ConvertTo-Json -Depth 4 | Out-File -FilePath $completionMarker -Encoding UTF8
+    Write-Log "スタートアップ無効化処理の完了（マーカーはMainWorkflowが作成）"
 
     # 他のセットアップスクリプトに合わせ、処理自体が成功したら 0 を返す
     exit 0

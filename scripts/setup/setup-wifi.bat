@@ -85,8 +85,7 @@ rem Wi-Fiプロファイルの一覧を表示（確認用）
 echo 現在のWi-Fiプロファイル一覧:
 netsh wlan show profiles
 
-rem 正常に完了した場合、完了ファイルを作成
-echo %date% %time% > status\setup-wifi.completed
+rem 完了マーカーは MainWorkflow 側で作成されます
 echo === Wi-Fi設定プロファイル適用完了 ===
 echo Wi-Fi設定プロファイルの適用が正常に完了しました。
 exit /b 0

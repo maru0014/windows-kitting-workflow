@@ -298,13 +298,8 @@ try {
         Set-WingetConfiguration
         Test-WingetSources
 
-        # 完了マーカーの作成
-        $completionMarker = Get-CompletionMarkerPath -TaskName "winget"
-        @{
-            completedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-            action      = "already_available"
-            version     = (& winget --version 2>$null)
-        } | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+        # 完了マーカーは MainWorkflow 側で作成されます
+        Write-Log "winget 設定完了（既に利用可能、マーカーはMainWorkflowが作成）"
 
         exit 0
     }
@@ -339,13 +334,8 @@ try {
 
     Write-Log "wingetのインストールと設定が正常に完了しました"
 
-    # 完了マーカーの作成
-    $completionMarker = Get-CompletionMarkerPath -TaskName "winget"
-    @{
-        completedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        action      = "installed"
-        version     = (& winget --version 2>$null)
-    } | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+    # 完了マーカーは MainWorkflow 側で作成されます
+    Write-Log "winget インストール・設定完了（マーカーはMainWorkflowが作成）"
 
     exit 0
 

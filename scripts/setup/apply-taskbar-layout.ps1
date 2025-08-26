@@ -143,21 +143,8 @@ try {
         }
     }
 
-    # 完了ステータスファイルの作成
-    $statusDir = Get-WorkflowPath -PathType "Status"
-    if (-not (Test-Path $statusDir)) {
-        New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-    }
-
-    $statusFile = Get-CompletionMarkerPath -TaskName "apply-taskbar-layout"
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    if ($DryRun) {
-        Write-Log "[DryRun] ステータスファイル作成予定: $statusFile"
-    }
-    else {
-        Set-Content -Path $statusFile -Value "Completed at $timestamp" -Encoding UTF8
-        Write-Log "ステータスファイルを作成しました: $statusFile"
-    }
+    # 完了マーカーは MainWorkflow 側で作成されます
+    Write-Log "適用完了（マーカーはMainWorkflowが作成）"
 
     Write-Log "タスクバー レイアウト適用処理が完了しました"
 }

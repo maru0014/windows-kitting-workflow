@@ -128,17 +128,8 @@ try {
     }
     catch {
         Write-Log "Windows Defender 状態確認エラー: $($_.Exception.Message)" -Level "WARN"
-    }    # 完了マーカーの作成
-    $completionMarker = Get-CompletionMarkerPath -TaskName "init"
-    @{
-        completedAt            = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        computerName           = $env:COMPUTERNAME
-        userName               = $env:USERNAME
-        osVersion              = [Environment]::OSVersion.VersionString
-        powershellVersion      = $PSVersionTable.PSVersion.ToString()
-        networkStatus          = $networkStatus
-        initializationDuration = (Get-Date) - (Get-Date $systemInfo.InitializedAt)
-    } | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+    }    # 完了マーカーは MainWorkflow 側で作成されます
+    Write-Log "初期化処理の完了（マーカーはMainWorkflowが作成）"
 
     Write-Log "初期化処理が正常に完了しました"
     exit 0

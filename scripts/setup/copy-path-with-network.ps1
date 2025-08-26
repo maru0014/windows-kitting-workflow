@@ -287,10 +287,9 @@ $desc): '$effectiveSourcePath' -> '$effectiveDestinationPath'"
         Write-Log "コピーが完了しました"
     }
 
-    # 完了マーカー
-    $statusPath = Get-CompletionMarkerPath -TaskName $ScriptName
+    # 完了マーカーは MainWorkflow 側で作成されます
     if (-not $DryRun) {
-        Set-Content -Path $statusPath -Value ("Completed at " + (Get-Date -Format "yyyy-MM-dd HH:mm:ss")) -Encoding UTF8
+        Write-Log "コピー処理の完了（マーカーはMainWorkflowが作成）"
     }
 
 }

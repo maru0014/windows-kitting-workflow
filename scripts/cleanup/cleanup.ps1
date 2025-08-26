@@ -23,6 +23,16 @@ else {
 	exit 1
 }
 
+# 共通ヘルパー関数の読み込み（完了詳細の保存に使用）
+$helpersPath = Join-Path $rootDir "scripts\Common-WorkflowHelpers.ps1"
+if (Test-Path $helpersPath) {
+	. $helpersPath
+}
+else {
+	Write-Error "共通ヘルパーが見つかりません: $helpersPath"
+	exit 1
+}
+
 # ログ関数
 function Write-Log {
     param(
@@ -34,11 +44,8 @@ function Write-Log {
     Write-ScriptLog -Message $Message -Level $Level -ScriptName "cleanup" -LogFileName "cleanup.log"
 }
 
-# ログファイルの設定
-$logDir = Join-Path $rootDir "logs\scripts"
-$logFile = Join-Path $logDir "cleanup.log"
+# ログ/ステータス ディレクトリ設定
 $statusDir = Join-Path $rootDir "status"
-$statusFile = Join-Path $statusDir "cleanup.completed"
 
 # ステータスディレクトリの作成
 if (-not (Test-Path $statusDir)) {
@@ -322,21 +329,20 @@ try {
 
     Write-Log "🎉 クリーンアップが正常に完了しました"
 
-    # 完了ステータスファイルの作成
-    $completionInfo = @{
+    # 完了詳細の保存（マーカーは MainWorkflow 側で作成）
+    $completionInfo = [ordered]@{
         timestamp            = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         status               = "completed"
-        duration             = $duration
+        durationMinutes      = [math]::Round($duration, 2)
         adminRights          = $isAdmin
-        skippedSystemCleanup = $SkipSystemCleanup
+        skippedSystemCleanup = [bool]$SkipSystemCleanup
         archivedLogs         = (-not $NoArchiveLogs)
         completedTasks       = $completedTasks
         failedTasks          = $failedTasks
         deletedItems         = $totalDeletedItems
         freedSpaceMB         = $totalDeletedSizeMB
-    } | ConvertTo-Json
-
-    Set-Content -Path $statusFile -Value $completionInfo -Encoding UTF8
+    }
+    try { $null = Write-CompletionDetail -StepId 'cleanup' -Data $completionInfo } catch { }
 
     Write-Log "=========================================="
     Write-Log "🏁 クリーンアップスクリプト正常終了"
@@ -355,17 +361,16 @@ catch {
     Write-Log "💥 エラー: クリーンアップスクリプトでエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
     Write-Log "📋 エラー詳細: $($_.Exception.StackTrace)" -Level "ERROR"
 
-    # エラーステータスファイルの作成
-    $errorInfo = @{
+    # エラー詳細の保存（マーカーは MainWorkflow 側で作成）
+    $errorInfo = [ordered]@{
         timestamp      = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
         status         = "error"
         errorMessage   = $_.Exception.Message
         stackTrace     = $_.Exception.StackTrace
         completedTasks = $completedTasks
         failedTasks    = $failedTasks
-    } | ConvertTo-Json
-
-    Set-Content -Path $statusFile -Value $errorInfo -Encoding UTF8
+    }
+    try { $null = Write-CompletionDetail -StepId 'cleanup' -Data $errorInfo } catch { }
 
     exit 1
 }

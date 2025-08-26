@@ -298,14 +298,8 @@ try {
 	if (-not $availableUpdates -or $availableUpdates.Count -eq 0) {
 		Write-Log "利用可能なアップデートがありません。処理を完了します"
 
-		# 完了マーカーの作成
-		$completionMarker = Get-CompletionMarkerPath -TaskName "windows-update"
-		@{
-			completedAt      = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-			updatesInstalled = 0
-			rebootRequired   = $false
-			message          = "利用可能なアップデートなし"
-		} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+		# 完了マーカーは MainWorkflow 側で作成されます
+		Write-Log "Windows Update 完了（アップデートなし、マーカーはMainWorkflowが作成）"
 
 		exit 0
 	}

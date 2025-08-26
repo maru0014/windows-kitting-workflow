@@ -437,12 +437,8 @@ function Main {
 			Write-Log "BitLockerは既に有効になっています (暗号化率: $($existingStatus.EncryptionPercentage)%)"
 			Write-Log "強制実行する場合は -Force パラメータを使用してください"
 
-			# 完了フラグファイル作成
-			$statusPath = Get-WorkflowPath -PathType "Status"
-			if (-not (Test-Path $statusPath)) {
-				New-Item -ItemType Directory -Path $statusPath -Force | Out-Null
-			}
-			New-Item -ItemType File -Path (Join-Path $statusPath "setup-bitlocker.completed") -Force | Out-Null
+			# 完了マーカーは MainWorkflow 側で作成されます
+			Write-Log "BitLocker設定済み（マーカーはMainWorkflowが作成）"
 
 			exit 0
 		}
@@ -453,12 +449,8 @@ function Main {
 		if ($result) {
 			Write-Log "BitLocker設定が正常に完了しました"
 
-			# 完了フラグファイル作成
-			$statusPath = Get-WorkflowPath -PathType "Status"
-			if (-not (Test-Path $statusPath)) {
-				New-Item -ItemType Directory -Path $statusPath -Force | Out-Null
-			}
-			New-Item -ItemType File -Path (Join-Path $statusPath "setup-bitlocker.completed") -Force | Out-Null
+			# 完了マーカーは MainWorkflow 側で作成されます
+			Write-Log "BitLocker設定完了（マーカーはMainWorkflowが作成）"
 
 			Write-Log "==================== BitLocker設定完了 ===================="
 			exit 0

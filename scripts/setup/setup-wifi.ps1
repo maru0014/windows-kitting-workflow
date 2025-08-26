@@ -250,14 +250,8 @@ function Add-WiFiProfile {
 				Write-Log "適用されたプロファイル: $xmlProfileName"
 			}
 
-			# ステータスファイルの作成
-			$statusDir = Get-WorkflowPath -PathType "Status"
-			if (-not (Test-Path $statusDir)) {
-				New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-			}
-
-			$timestamp = Get-Date -Format "yyyy/MM/dd HH:mm:ss"
-			Set-Content -Path (Join-Path $statusDir "setup-wifi.completed") -Value $timestamp -Encoding UTF8
+			# 完了マーカーは MainWorkflow 側で作成されます
+			Write-Log "Wi-Fi プロファイル適用完了（マーカーはMainWorkflowが作成）"
 
 			return $true
 		}
@@ -269,14 +263,8 @@ function Add-WiFiProfile {
 				# Forceモードの場合は、プロファイルが作成されていなくても成功として扱う
 				Write-Log "Forceモード: プロファイルの作成をスキップしました"
 
-				# ステータスファイルの作成
-				$statusDir = Get-WorkflowPath -PathType "Status"
-				if (-not (Test-Path $statusDir)) {
-					New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-				}
-
-				$timestamp = Get-Date -Format "yyyy/MM/dd HH:mm:ss"
-				Set-Content -Path (Join-Path $statusDir "setup-wifi.completed") -Value $timestamp -Encoding UTF8
+				# 完了マーカーは MainWorkflow 側で作成されます
+				Write-Log "Wi-Fi プロファイル適用（Force）完了（マーカーはMainWorkflowが作成）"
 
 				return $true
 			}

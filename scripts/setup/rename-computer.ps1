@@ -106,17 +106,8 @@ function New-CompletionFlag {
         New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
     }
 
-    $flagFile = Join-Path $statusDir "rename-computer.completed"
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $content = @"
-PC名変更完了
-実行時刻: $timestamp
-変更前: $env:COMPUTERNAME
-変更後: $($targetMachine."Machine Name")
-シリアル番号: $serialNumber
-"@
-    Set-Content -Path $flagFile -Value $content -Encoding UTF8
-    Write-Log "完了フラグファイルを作成しました: $flagFile"
+    # 完了マーカーは MainWorkflow 側で作成されます
+    Write-Log "PC名変更完了（マーカーはMainWorkflowが作成）"
 }
 
 # メイン処理

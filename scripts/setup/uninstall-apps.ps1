@@ -183,28 +183,8 @@ else {
 	Write-Log "一部のアプリケーションの処理でエラーが発生しましたが、他の処理は正常に完了しました" -Level "WARN"
 }
 
-# 完了ステータスファイルの作成
-try {
-	$workflowRoot = Get-WorkflowRoot
-	if ($workflowRoot) {
-		$statusDir = Join-Path $workflowRoot "status"
-		if (-not (Test-Path $statusDir)) {
-			New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-		}
-		$statusFile = Join-Path $statusDir "uninstall-apps.completed"
-		New-Item -ItemType File -Path $statusFile -Force | Out-Null
-		Write-Log "ステータスファイルを作成しました: $statusFile"
-	}
-	else {
-		Write-Log "ワークフローのルートディレクトリが取得できませんでした" -Level "WARN"
-	}
-}
-catch {
-	Write-Log "ステータスファイル作成中にエラーが発生しました: $($_.Exception.Message)" -Level "ERROR"
-	# ステータスファイル作成の失敗は致命的ではないため、処理を継続
-}
-
-Write-Log "=== 不要アプリケーションのアンインストール完了 ==="
+# 完了マーカーは MainWorkflow 側で作成されます
+Write-Log "アンインストール処理の完了（マーカーはMainWorkflowが作成）"
 
 # 一部失敗があっても全体としては成功扱いとする（部分的成功）
 if ($failedApps -eq $totalApps) {

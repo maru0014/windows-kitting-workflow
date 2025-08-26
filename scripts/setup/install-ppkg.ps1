@@ -250,16 +250,9 @@ try {
 		if (-not (Remove-PPKGById -PackageId $ppkgInfo.PackageId)) { exit 1 }
 	}
 
-	# 完了マーカーの作成
-	$completionMarker = Get-CompletionMarkerPath -TaskName "ppkg-install"
-	@{
-		completedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-		packagePath = $resolvedPath
-		packageId   = $ppkgInfo.PackageId
-		packageName = $ppkgInfo.PackageName
-		version     = $ppkgInfo.Version
-		removedAfterInstall = [bool]$RemoveAfterInstall
-	} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+	# 完了マーカーは MainWorkflow 側で作成されます（ここでは詳細ログのみ）
+	Write-Log "PPKG 処理の完了を記録（集中管理のためマーカーは作成しません）"
+	Write-Log "PackageId=$($ppkgInfo.PackageId), PackageName=$($ppkgInfo.PackageName), Version=$($ppkgInfo.Version)"
 
 	Write-Log "🎉 PPKG インストール処理が正常に完了しました"
 	exit 0

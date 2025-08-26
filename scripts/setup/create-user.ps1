@@ -220,25 +220,7 @@ function Write-CompletionMarker {
 		[string]$Source,
 		[bool]$Skipped = $false
 	)
-
-	try {
-		$marker = Get-CompletionMarkerPath -TaskName "create-user"
-		$data = @{
-			completedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-			userName    = $UserName
-			groups      = $Groups
-			source      = $Source
-			skipped     = $Skipped
-		}
-		$json = $data | ConvertTo-Json -Depth 4
-		$dir = Split-Path $marker -Parent
-		if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-		$json | Out-File -FilePath $marker -Encoding UTF8
-		Write-Log "完了マーカーを作成しました: $marker"
-	}
-	catch {
-		Write-Log "完了マーカーの作成に失敗しました: $($_.Exception.Message)" -Level "WARN"
-	}
+	# 完了マーカーは MainWorkflow 側で集中管理されます（ここでは何もしません）
 }
 
 # メイン処理
@@ -258,14 +240,18 @@ try {
 	$cred = Resolve-UserCredential -ParamUserName $UserName -ParamPassword $Password -CsvPath $fullConfigPath
 	if (-not $cred) {
 		Write-Log "ユーザー情報が見つからなかったためスキップします" -Level "WARN"
-		Write-CompletionMarker -UserName "" -Groups @() -Source "None" -Skipped $true
+		# 完了マーカーはMainWorkflow側で作成されます（詳細はログ/通知をご確認ください）
 		Write-Log "=== ユーザー作成処理スキップ ==="
 		exit 0
 	}
 	Write-Log "資格情報ソース: $($cred.Source)"
 	Write-Log "対象ユーザー: $($cred.UserName)"
 
-	if ([string]::IsNullOrWhiteSpace($cred.Password)) { Write-Log "パスワードが空のためスキップします" -Level "WARN"; Write-CompletionMarker -UserName $cred.UserName -Groups @() -Source $cred.Source -Skipped $true; exit 0 }
+	if ([string]::IsNullOrWhiteSpace($cred.Password)) {
+		Write-Log "パスワードが空のためスキップします" -Level "WARN"
+		# 完了マーカーはMainWorkflow側で作成されます（詳細はログ/通知をご確認ください）
+		exit 0
+	}
 
 	# ユーザー作成/更新
 	$secure = ConvertTo-SecureString $cred.Password -AsPlainText -Force
@@ -280,8 +266,7 @@ try {
 	$groupOk = Add-UserToGroups -UserName $cred.UserName -TargetGroups $targetGroups
 	if (-not $groupOk) { Write-Log "一部グループへの追加に失敗しました" -Level "WARN" }
 
-	# 完了マーカー
-	Write-CompletionMarker -UserName $cred.UserName -Groups $targetGroups -Source $cred.Source -Skipped:$false
+	# 完了マーカーはMainWorkflow側で作成されます（詳細はログ/通知をご確認ください）
 
 	Write-Log "=== ユーザー作成処理完了 ==="
 	exit 0

@@ -682,24 +682,15 @@ try {
 		$success = ($_.Group | Where-Object Success).Count
 		$total = $_.Count
 		Write-Log "   • $($_.Name): $success/$total 成功"
-	}	# 完了マーカーの作成
-	$completionMarker = Get-CompletionMarkerPath -TaskName "install-basic-apps"
-	$completionData = @{
-		completedAt          = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-		totalApplications    = $results.Count
-		successfulInstalls   = $successCount
-		failedInstalls       = $failCount
-		totalDurationMinutes = [math]::Round($totalDuration, 1)
-		results              = $results
-	}
-	$completionData | ConvertTo-Json -Depth 3 | Out-File -FilePath $completionMarker -Encoding UTF8
+	}	# 完了マーカーは MainWorkflow 側で作成されます
+	Write-Log "基本アプリインストールの完了（マーカーはMainWorkflowが作成）"
 
 	Write-Log "========================================="
 	if ($failCount -eq 0) {
 		Write-Log "🎉 全てのアプリケーションのインストールが完了しました！"
 		exit 0
 	}
- else {
+	else {
 		Write-Log "⚠️  一部のアプリケーションのインストールに失敗しました"
 		exit 1
 	}

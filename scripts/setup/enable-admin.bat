@@ -25,8 +25,7 @@ if %errorlevel% neq 0 (
 
 echo administratorユーザーを有効化しました。
 
-rem 正常に完了した場合、完了ファイルを作成
-echo %date% %time% > status\enable-admin.completed
+rem 完了マーカーは MainWorkflow 側で作成されます
 echo === administratorユーザー有効化完了 ===
 echo administratorユーザーの有効化が正常に完了しました。
 exit /b 0

@@ -159,18 +159,8 @@ try {
 		Write-Log "パブリックファイルソースフォルダが見つかりません: $publicSourcePath" -Level "WARN"
 	}
 
-	# 完了ステータスファイルの作成
-	$statusDir = Get-WorkflowPath -PathType "Status"
-	if (-not (Test-Path $statusDir)) {
-		New-Item -ItemType Directory -Path $statusDir -Force | Out-Null
-	}
-
-	$statusFile = Get-CompletionMarkerPath -TaskName "deploy-desktop-files"
-	$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-	if (-not $DryRun) {
-		Set-Content -Path $statusFile -Value "Completed at $timestamp" -Encoding UTF8
-		Write-Log "ステータスファイルを作成しました: $statusFile"
-	}
+	# 完了マーカーは MainWorkflow 側で作成されます
+	Write-Log "配置処理の完了（マーカーはMainWorkflowが作成）"
 
 	Write-Log "デスクトップファイル配置処理が完了しました"
 

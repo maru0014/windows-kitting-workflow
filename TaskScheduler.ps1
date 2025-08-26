@@ -142,15 +142,8 @@ Windows Kitting Workflow - Windows 11自動セットアップシステム
 		$registeredTask = Get-ScheduledTask -TaskName $TaskName
 		Write-Log "タスク状態: $($registeredTask.State)"
 
-		# 完了マーカー作成
-		$completionMarker = Join-Path $PSScriptRoot "status\task-scheduler-setup.completed"
-		@{
-			taskName       = $TaskName
-			username       = $Username
-			scriptPath     = $scriptPath
-			registeredTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-			taskState      = $registeredTask.State
-		} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+		# 完了マーカーは MainWorkflow 側で作成されます
+		Write-Log "タスク登録完了（マーカーはMainWorkflowが作成）"
 
 		return $true
 
@@ -188,12 +181,8 @@ function Unregister-WorkflowTask {
 
 		Write-Log "タスクが正常に削除されました: $TaskName"
 
-		# 完了マーカー作成
-		$completionMarker = Join-Path $PSScriptRoot "status\task-scheduler-cleanup.completed"
-		@{
-			taskName         = $TaskName
-			unregisteredTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-		} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+		# 完了マーカーは MainWorkflow 側で作成されます
+		Write-Log "タスク削除完了（マーカーはMainWorkflowが作成）"
 
 		return $true
 

@@ -17,6 +17,8 @@ param(
 
 # 共通通知関数の読み込み
 . (Join-Path $PSScriptRoot "scripts\Common-NotificationFunctions.ps1")
+# ワークフロー共通ヘルパーの読み込み（パス解決・マーカー支援）
+. (Join-Path $PSScriptRoot "scripts\Common-WorkflowHelpers.ps1")
 
 # グローバル変数
 $Global:WorkflowConfig = $null
@@ -388,6 +390,44 @@ Status: Confirmed by user dialog
 }
 
 # 完了チェック
+function Resolve-CompletionMarkerPath {
+	param(
+		[object]$Step
+	)
+
+	# 既定テンプレート
+	$defaultTemplate = "status/{id}.completed"
+
+	$relativePath = $null
+	$pathFromConfig = $null
+	if ($Step -and $Step.completionCheck -and $Step.completionCheck.type -eq "file") {
+		$pathFromConfig = $Step.completionCheck.path
+	}
+
+	if ([string]::IsNullOrWhiteSpace($pathFromConfig)) {
+		# 未指定なら既定テンプレート
+		$relativePath = Expand-PathPlaceholders -Template $defaultTemplate -Step $Step
+	}
+	else {
+		# 指定あり
+		$hasTemplateToken = ($pathFromConfig -match "\{.+\}")
+		if ($hasTemplateToken) {
+			$relativePath = Expand-PathPlaceholders -Template $pathFromConfig -Step $Step
+		}
+		else {
+			$relativePath = $pathFromConfig
+		}
+	}
+
+	# 絶対/相対を判定してフルパスへ
+	if ([System.IO.Path]::IsPathRooted($relativePath)) {
+		return $relativePath
+	}
+	else {
+		return (Join-Path $PSScriptRoot $relativePath)
+	}
+}
+
 function Test-StepCompletion {
 	param(
 		[object]$Step
@@ -397,8 +437,20 @@ function Test-StepCompletion {
 
 	switch ($completionCheck.type) {
 		"file" {
-			$filePath = Join-Path $PSScriptRoot $completionCheck.path
-			return Test-Path $filePath
+			# 既定のステップIDマーカー、または互換用の completionCheck.path のどちらかが存在すれば完了
+			$defaultPath = Expand-PathPlaceholders -Template "status/{id}.completed" -Step $Step
+			$defaultFull = if ([System.IO.Path]::IsPathRooted($defaultPath)) { $defaultPath } else { (Join-Path $PSScriptRoot $defaultPath) }
+			if (Test-Path $defaultFull) { return $true }
+
+			# 互換: completionCheck.path が指定されている場合はそちらも許可
+			if ($Step -and $Step.completionCheck -and $Step.completionCheck.path -and -not [string]::IsNullOrWhiteSpace($Step.completionCheck.path)) {
+				$configuredFull = Resolve-CompletionMarkerPath -Step $Step
+				if ($configuredFull -and ($configuredFull -ne $defaultFull) -and (Test-Path $configuredFull)) {
+					return $true
+				}
+			}
+
+			return $false
 		}
 		"registry" {
 			try {
@@ -494,32 +546,50 @@ function Invoke-WorkflowStep {
 						$parameters = @()
 					}
 
-					if ($Step.type -eq "powershell") {
-						& $scriptPath @parameters
-						$exitCode = $LASTEXITCODE
+					# 環境変数でステップ情報を渡す
+					$previousStepId = $env:WKF_STEP_ID
+					$previousRunId = $env:WKF_RUN_ID
+					$env:WKF_STEP_ID = $Step.id
+					$runIdSource = if ($Global:WorkflowInitialStartTime) { $Global:WorkflowInitialStartTime } else { Get-Date }
+					$env:WKF_RUN_ID = $runIdSource.ToString("yyyyMMdd-HHmmssfff")
+
+					try {
+						if ($Step.type -eq "powershell") {
+							& $scriptPath @parameters
+							$exitCode = $LASTEXITCODE
+						}
+						else {
+							& cmd /c $scriptPath @parameters
+							$exitCode = $LASTEXITCODE
+						}
 					}
-					else {
-						& cmd /c $scriptPath @parameters
-						$exitCode = $LASTEXITCODE
+					finally {
+						if ($null -ne $previousStepId) { $env:WKF_STEP_ID = $previousStepId } else { Remove-Item Env:\WKF_STEP_ID -ErrorAction SilentlyContinue }
+						if ($null -ne $previousRunId) { $env:WKF_RUN_ID = $previousRunId } else { Remove-Item Env:\WKF_RUN_ID -ErrorAction SilentlyContinue }
 					}
 				}
 			}
 
 			if ($exitCode -eq 0) {
-				# 完了マーカー作成
-				$completionMarker = Join-Path $PSScriptRoot $Step.completionCheck.path
+				# 完了マーカー作成（集中管理・上書き回避）
+				$completionMarker = Resolve-CompletionMarkerPath -Step $Step
 				$completionDir = Split-Path $completionMarker -Parent
 				if (-not (Test-Path $completionDir)) {
 					New-Item -ItemType Directory -Path $completionDir -Force | Out-Null
 				}
 
 				if (-not $DryRun) {
-					@{
-						stepId      = $Step.id
-						stepName    = $Step.name
-						completedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-						exitCode    = $exitCode
-					} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+					if (-not (Test-Path $completionMarker)) {
+						@{
+							stepId      = $Step.id
+							stepName    = $Step.name
+							completedAt = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+							exitCode    = $exitCode
+						} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
+					}
+					else {
+						Write-Log "既存の完了マーカーを検出したため上書きしません: $completionMarker" -Level "DEBUG"
+					}
 				}
 
 				Write-Log "ステップが正常に完了しました: $($Step.name)"

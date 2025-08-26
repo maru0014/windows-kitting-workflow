@@ -352,16 +352,8 @@ try {
 		Write-Log "========================================================="
 	}
 
-	# 完了マーカーの作成
-	$completionMarker = Get-CompletionMarkerPath -TaskName "registry-import"
-	@{
-		completedAt    = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-		regFilesPath   = $RegFilesPath
-		processedFiles = $regFiles.Count
-		successCount   = $successCount
-		errorCount     = $errorCount
-	} | ConvertTo-Json | Out-File -FilePath $completionMarker -Encoding UTF8
-
+	# 完了マーカーは MainWorkflow 側で作成されます
+	Write-Log "レジストリ処理の完了（マーカーはMainWorkflowが作成）"
 	Write-Log "==========================================="
 	Write-Log "📊 レジストリ設定処理が完了しました"
 	Write-Log "==========================================="
