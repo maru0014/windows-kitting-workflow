@@ -110,6 +110,9 @@ try {
 
                 # 既定値の準備
                 $serial = Get-PCSerialNumber
+                # ユーザー名/パスワードは空文字を既定値とし、CSV > JSON の優先順で補完
+                $defaultUser = ""
+                $defaultPass = ""
 
                 # machine_list.csv からPC名既定値を取得
                 $machineListPath = Join-Path $workflowRoot "config\machine_list.csv"
@@ -119,7 +122,9 @@ try {
                         $csv = Import-Csv -Path $machineListPath
                         $matched = $csv | Where-Object { $_.'Serial Number' -eq $serial }
                         if ($matched) {
-                            $defaultPCName = $matched.'Machine Name'
+                            if ($matched.'Machine Name') { $defaultPCName = $matched.'Machine Name' }
+                            if (-not [string]::IsNullOrWhiteSpace($matched.'User Name')) { $defaultUser = [string]$matched.'User Name' }
+                            if (-not [string]::IsNullOrWhiteSpace($matched.'User Password')) { $defaultPass = [string]$matched.'User Password' }
                         }
                     }
                     catch {
@@ -127,16 +132,14 @@ try {
                     }
                 }
 
-                # local_user.json からユーザー既定値を取得
+                # local_user.json からユーザー既定値を取得（CSVで未設定の項目のみ補完）
                 $localUserPath = Join-Path $workflowRoot "config\local_user.json"
-                $defaultUser = "User001"
-                $defaultPass = "User1234"
                 $defaultGroups = "Administrators"
                 if (Test-Path $localUserPath) {
                     try {
                         $lu = Get-Content -Path $localUserPath -Encoding UTF8 -Raw | ConvertFrom-Json
-                        if ($lu.UserName) { $defaultUser = [string]$lu.UserName }
-                        if ($lu.Password) { $defaultPass = [string]$lu.Password }
+                        if ($lu.UserName -and [string]::IsNullOrWhiteSpace($defaultUser)) { $defaultUser = [string]$lu.UserName }
+                        if ($lu.Password -and [string]::IsNullOrWhiteSpace($defaultPass)) { $defaultPass = [string]$lu.Password }
                         if ($lu.Groups -and $lu.Groups.Count -gt 0) { $defaultGroups = ($lu.Groups -join ',') }
                     }
                     catch {
