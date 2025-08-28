@@ -597,6 +597,27 @@ function Test-StepDependencies {
 	return $true
 }
 
+# 依存完了マーカー（ファイル）存在チェック（安全装置）
+function Test-StepDependencyMarkers {
+	param(
+		[object]$Step,
+		[array]$AllSteps
+	)
+
+	if (-not $Step.dependsOn -or $Step.dependsOn.Count -eq 0) { return $true }
+
+	foreach ($dependencyId in $Step.dependsOn) {
+		# 依存ステップの完了マーカー推定パス（status/<id>.completed）
+		$markerPath = Join-Path $PSScriptRoot (Join-Path "status" ("{0}.completed" -f $dependencyId))
+		if (-not (Test-Path $markerPath)) {
+			Write-Log "依存完了マーカーが見つかりません: $markerPath（依存: $dependencyId, 実行対象: $($Step.id)）" -Level "DEBUG"
+			return $false
+		}
+	}
+
+	return $true
+}
+
 # メインワークフロー実行
 function Start-MainWorkflow {
 	try {
@@ -671,6 +692,13 @@ function Start-MainWorkflow {
 				}
 
 				if (Test-StepDependencies -Step $step -CompletedSteps $completedSteps) {
+					# 追加の安全装置: 依存ステップの完了マーカー（ファイル）も存在することを確認
+					if (-not (Test-StepDependencyMarkers -Step $step -AllSteps $steps)) {
+						Write-Log "依存完了マーカー未検出のため実行を保留します: $($step.id)（dependsOn: $($step.dependsOn -join ', ')）" -Level "WARN"
+						continue
+					}
+
+					Write-Log "依存関係OK: 実行=$($step.id), dependsOn=[$($step.dependsOn -join ', ')], 完了済み=[$($completedSteps -join ', ')]" -Level "DEBUG"
 					$success = Invoke-WorkflowStep -Step $step
 
 					if ($success) {
