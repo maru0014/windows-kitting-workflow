@@ -27,51 +27,99 @@ Windows Kitting Workflowは、Windows 11 PCを完全自動でセットアップ�
 ```
 windows-kitting-workflow/
 ├── README.md                     # このファイル
-├── main.bat                     # メインエントリーポイント
-├── unblock-files.bat            # セキュリティブロック一括解除
-├── MainWorkflow.ps1             # メインワークフローエンジン
-├── WorkflowEditor.ps1           # ワークフロー設定GUIエディター
-├── AutoLogin.ps1                # 自動ログイン設定管理
-├── TaskScheduler.ps1            # タスクスケジューラ管理
-├── config/                      # 設定ファイル
-│   ├── workflow.json            # ワークフロー設定
-│   ├── applications.json        # アプリケーション設定
-│   ├── notifications.json       # 通知設定
-│   ├── machine_list.csv         # マシンリスト（オプション）
-│   ├── desktop/                # デスクトップファイル
-│   │   ├── public/             # パブリック用
-│   │   └── user/               # ユーザー用
-│   ├── registry/               # レジストリ設定ファイル
-│   └── wi-fi.xml               # Wi-Fi設定XML
-├── scripts/                     # スクリプトファイル
-│   ├── Common-LogFunctions.ps1  # 共通ログ関数
-│   ├── Unblock-AllFiles.ps1    # セキュリティブロック一括解除
-│   ├── setup/                  # セットアップスクリプト
-│   └── cleanup/                # クリーンアップスクリプト
-├── docs/                       # ドキュメント
-│   ├── README.md                    # ドキュメント一覧とナビゲーション
-│   ├── Registry-Configuration.md    # レジストリ設定詳細
-│   ├── Application-Management.md    # アプリケーション管理
-│   ├── Customization-Guide.md      # カスタマイズガイド
-│   ├── Windows-Update-Guide.md     # Windows Update詳細
-│   ├── Wi-Fi-Configuration-Guide.md # Wi-Fi設定ガイド
-│   ├── Slack-Thread-Guide.md       # Slackスレッド詳細
-│   ├── Troubleshooting.md          # トラブルシューティング
-│   ├── Testing-Guide.md            # テスト・診断ガイド
-│   ├── AutoLogin-README.md         # 自動ログイン詳細
-│   ├── Teams-Notification-V2-Guide.md  # Teams通知新スレッド化方式ガイド
-│   └── WorkflowRoot-Improvement-Guide.md  # WorkflowRoot改善詳細
-├── tests/                      # テスト・診断ツール
-│   ├── README.md               # テストガイド
-│   ├── Run-AllTests.ps1        # テストランナー
-│   ├── Test-JsonConfiguration.ps1  # JSON検証
-│   ├── Test-ProjectStructure.ps1   # プロジェクト構造検証
-│   ├── run-tests.bat          # 簡単テスト実行
-│   └── run-tests-advanced.bat # 高度テスト実行
+├── LICENSE
+├── plan.md
+├── main.bat                      # メインエントリーポイント
+├── unblock-files.bat             # セキュリティブロック一括解除
+├── workflow-editor.bat           # WorkflowEditor 起動バッチ
+├── MainWorkflow.ps1              # メインワークフローエンジン
+├── WorkflowEditor.ps1            # ワークフロー設定GUIエディター
+├── AutoLogin.ps1                 # 自動ログイン設定管理
+├── TaskScheduler.ps1             # タスクスケジューラ管理
+├── config/                       # 設定ファイル
+│   ├── workflow.json             # ワークフロー設定
+│   ├── applications.json         # アプリケーション設定
+│   ├── notifications.json        # 通知設定
+│   ├── local_user.json           # ローカルユーザー設定
+│   ├── machine_list.csv          # マシンリスト（オプション）
+│   ├── start_pins.ppkg           # スタートメニュー固定構成
+│   ├── TaskbarLayoutModification.xml # タスクバー配置
+│   ├── wi-fi.xml                 # Wi‑Fi設定XML
+│   ├── desktop/                  # デスクトップファイル
+│   │   ├── public/               # パブリック用
+│   │   └── user/                 # ユーザー用
+│   ├── registry/                 # レジストリ設定ファイル
+│   │   ├── 01_explorer_settings.*
+│   │   ├── 02_performance_settings.*
+│   │   ├── ...
+│   └── office/                   # Office 導入ファイル
+│       ├── setup.exe
+│       ├── configuration-Office2021.xml
+│       ├── configuration-Office365-x64.xml
+│       └── Office/
+│           └── Data/
+│               └── ...
+├── scripts/                      # スクリプトファイル
+│   ├── Unblock-AllFiles.ps1      # セキュリティブロック一括解除
+│   ├── Common-LogFunctions.ps1   # 共通ログ関数
+│   ├── Common-NotificationFunctions.ps1  # 共通通知関数
+│   ├── Common-WorkflowHelpers.ps1        # 共通ワークフロー補助
+│   ├── setup/                    # セットアップスクリプト
+│   │   ├── initialize.ps1
+│   │   ├── install-winget.ps1
+│   │   ├── install-basic-apps.ps1
+│   │   ├── uninstall-apps.ps1
+│   │   ├── install-office.ps1
+│   │   ├── install-ppkg.ps1
+│   │   ├── apply-taskbar-layout.ps1
+│   │   ├── import-registry.ps1
+│   │   ├── disable-startup-apps.ps1
+│   │   ├── deploy-desktop-files.ps1
+│   │   ├── setup-wifi.ps1
+│   │   ├── setup-wifi.bat
+│   │   ├── create-user.ps1
+│   │   ├── remove-user.ps1
+│   │   ├── rename-computer.ps1
+│   │   ├── setup-bitlocker.ps1
+│   │   └── windows-update.ps1
+│   └── cleanup/                  # クリーンアップスクリプト
+│       └── cleanup.ps1
+├── docs/                         # ドキュメント
+│   ├── README.md
+│   ├── TABLE_OF_CONTENTS.md
+│   ├── VALIDATION_NOTES.md
+│   ├── Testing-Guide.md
+│   ├── Troubleshooting.md
+│   ├── Registry-Configuration.md
+│   ├── Application-Management.md
+│   ├── Customization-Guide.md
+│   ├── Windows-Update-Guide.md
+│   ├── Wi-Fi-Configuration-Guide.md
+│   ├── File-Security-Unblock-Guide.md
+│   ├── Slack-Thread-Guide.md
+│   ├── Teams-Notification-V2-Guide.md
+│   ├── WorkflowRoot-Improvement-Guide.md
+│   ├── AutoLogin-README.md
+│   ├── Office-Installation-Guide.md
+│   ├── install_office_script.md
+│   ├── ppkg_installation_guide.md
+│   ├── taskbar_layout_guide.md
+│   ├── copy_path_with_network_guide.md
+│   ├── disable_startup_apps_guide.md
+│   ├── create-user-guide.md
+│   └── remove_user_guide.md
+├── tests/                        # テスト・診断ツール
+│   ├── README.md
+│   ├── Run-AllTests.ps1
+│   ├── Test-JsonConfiguration.ps1
+│   ├── Test-ProjectStructure.ps1
+│   ├── Test-TeamsNotificationV2.ps1
+│   ├── run-tests.bat
+│   └── run-tests-advanced.bat
 └── 自動生成フォルダ（実行時作成）
-    ├── backup/                 # バックアップファイル
-    ├── status/                 # ステータス管理
-    └── logs/                   # ログファイル
+    ├── backup/                  # バックアップファイル
+    ├── status/                  # ステータス管理
+    └── logs/                    # ログファイル
 ```
 
 ## クイックスタート

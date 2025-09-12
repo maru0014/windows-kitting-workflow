@@ -265,36 +265,34 @@ function Enable-BitLockerEncryption {
 			# PINコードを安全な文字列に変換
 			$securePin = ConvertTo-SecureString -String $PIN -AsPlainText -Force
 
-			# TPMの存在確認（参考コードより）
 			$tpm = Get-Tpm
 			if ($tpm.TpmPresent) {
 				# TPM + PIN保護でBitLockerを有効化
 				Enable-BitLocker -MountPoint $Drive -TpmAndPinProtector $securePin -UsedSpaceOnly -SkipHardwareTest
+				manage-bde -on C: -skiphardwaretest
 				Write-Log "✅ TPM + PIN保護でBitLockerを有効化しました"
 			}
 			else {
 				# TPMがない場合はPasswordProtectorで有効化（参考コードより）
 				Write-Log "TPMが利用できないため、パスワード保護で有効化中..."
 				Enable-BitLocker -MountPoint $Drive -PasswordProtector $securePin -UsedSpaceOnly -SkipHardwareTest
+				manage-bde -on C: -skiphardwaretest
 				Write-Log "✅ パスワード保護でBitLockerを有効化しました"
 			}
 			Write-Log "PINコード: $('*' * $PIN.Length) (マスク表示)"
 
 		}
 		else {
-			# PIN使用なしの場合（参考コードより manage-bde を使用）
 			Write-Log "PIN入力なしでBitLockerを有効化中..."
-			# manage-bdeコマンドを使用（参考コードより）
-			& manage-bde -on $Drive -skiphardwaretest | Out-Null
-			if ($LASTEXITCODE -eq 0) {
-				Write-Log "✅ manage-bdeでBitLockerを有効化しました"
+			$tpm = Get-Tpm
+			if (-not $tpm.TpmPresent) {
+				Write-Log "TPMが存在しません。TPM前提ポリシーに反します" -Level "ERROR"
+				return $false
 			}
-			else {
-				Write-Log "manage-bdeでの有効化に失敗しました。PowerShellコマンドレットで再試行..." -Level "WARN"
-				Enable-BitLocker -MountPoint $Drive -TpmProtector -UsedSpaceOnly -SkipHardwareTest
-				Write-Log "✅ TPM保護でBitLockerを有効化しました"
-			}
-  }
+			Enable-BitLocker -MountPoint $Drive -TpmProtector -UsedSpaceOnly -SkipHardwareTest
+			manage-bde -on C: -skiphardwaretest
+			Write-Log "✅ TPM保護でBitLockerを有効化しました"
+		}
 
 		# 回復キーをファイルに保存と通知準備（参考コードを基に改良）
 		$finalBLV = Get-BitLockerVolume -MountPoint $Drive
