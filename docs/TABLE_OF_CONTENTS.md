@@ -41,6 +41,7 @@
 | ドキュメント | 対象者 | 内容 |
 |-------------|--------|------|
 | [WorkflowEditorガイド](WorkflowEditor-Guide.md) | 中級者 | GUIワークフロー設定エディター |
+| [KeepAwake ガイド](KeepAwake-Guide.md) | 全ユーザー | 実行中のロック/スリープ抑止 |
 | [レジストリ設定ガイド](Registry-Configuration.md) | 上級者 | レジストリ設定の詳細説明 |
 | [アプリケーション管理ガイド](Application-Management.md) | 全ユーザー | アプリインストール管理 |
 | [BitLocker設定ガイド](BitLocker-Configuration-Guide.md) | 中級者 | BitLocker暗号化設定 |

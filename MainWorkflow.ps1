@@ -19,6 +19,8 @@ param(
 . (Join-Path $PSScriptRoot "scripts\Common-NotificationFunctions.ps1")
 # ワークフロー共通ヘルパーの読み込み（パス解決・マーカー支援）
 . (Join-Path $PSScriptRoot "scripts\Common-WorkflowHelpers.ps1")
+# 実行中のスリープ/画面オフ抑止ユーティリティ
+. (Join-Path $PSScriptRoot "scripts\Common-KeepAwake.ps1")
 
 # グローバル変数
 $Global:WorkflowConfig = $null
@@ -806,8 +808,16 @@ try {
 	# 設定読み込み
 	Read-Configuration -ConfigPath $ConfigPath -NotificationConfigPath $NotificationConfigPath
 
-	# ワークフロー実行
-	$exitCode = Start-MainWorkflow
+	# ワークフロー実行中はロック/スリープ抑止（ディスプレイも保持）
+	Start-KeepAwake -DisplayRequired
+	try {
+		# ワークフロー実行
+		$exitCode = Start-MainWorkflow
+	}
+	finally {
+		# 抑止を必ず解除
+		Stop-KeepAwake
+	}
 
 	# 実行時間を正確に計算
 	$durations = Get-WorkflowDurations
