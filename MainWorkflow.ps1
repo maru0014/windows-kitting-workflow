@@ -21,6 +21,8 @@ param(
 . (Join-Path $PSScriptRoot "scripts\Common-WorkflowHelpers.ps1")
 # 実行中のスリープ/画面オフ抑止ユーティリティ
 . (Join-Path $PSScriptRoot "scripts\Common-KeepAwake.ps1")
+# 共通ログ関数の読み込み（スクリプト/メイン共通で利用）
+. (Join-Path $PSScriptRoot "scripts\Common-LogFunctions.ps1")
 
 # グローバル変数
 $Global:WorkflowConfig = $null
@@ -95,42 +97,7 @@ function Write-Log {
 	}
 }
 
-# UTF-8 with BOM でログファイルに出力する関数
-function Write-LogToFile {
-	param(
-		[Parameter(Mandatory = $true)]
-		[string]$Path,
 
-		[Parameter(Mandatory = $true)]
-		[string]$Message
-	)
-
-	# ログディレクトリの作成
-	$logDir = Split-Path $Path -Parent
-	if (-not (Test-Path $logDir)) {
-		New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-	}
-
-	# UTF-8 with BOM でファイルに追記
-	$utf8WithBom = New-Object System.Text.UTF8Encoding($true)
-	$messageWithNewline = $Message + [Environment]::NewLine
-
-	# ファイルが存在しない場合は新規作成、存在する場合は追記
-	if (Test-Path $Path) {
-		$fileStream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
-	}
- else {
-		$fileStream = [System.IO.File]::Create($Path)
-	}
-
-	try {
-		$bytes = $utf8WithBom.GetBytes($messageWithNewline)
-		$fileStream.Write($bytes, 0, $bytes.Length)
-	}
-	finally {
-		$fileStream.Close()
-	}
-}
 
 # ワークフロー実行時間を計算するヘルパー関数
 function Get-WorkflowDurations {

@@ -20,7 +20,7 @@ function Test-ScriptLogLevel {
 	param(
 		[string]$MessageLevel
 	)
-		# ワークフローのルートディレクトリを取得
+	# ワークフローのルートディレクトリを取得
 	Get-WorkflowRoot $PSScriptRoot | Out-Null
 
 	# workflow.json設定ファイルのパスを構築
@@ -72,23 +72,73 @@ function Write-LogToFile {
 	$utf8WithBom = New-Object System.Text.UTF8Encoding($true)
 	$messageWithNewline = $Message + [Environment]::NewLine
 
-	# ファイルが存在しない場合は新規作成、存在する場合は追記
-	if (Test-Path $Path) {
-		$fileStream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
+	# 共有違反発生時のリトライ + フォールバック (*.alt.log)
+	$maxAttempts = 3
+	$attempt = 0
+	$opened = $false
+	$fileStream = $null
+
+	while (-not $opened -and $attempt -lt $maxAttempts) {
+		try {
+			if (Test-Path $Path) {
+				$fileStream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
+			}
+			else {
+				$fileStream = [System.IO.File]::Create($Path)
+				# 新しいファイルの場合はBOMを最初に書き込む
+				$bomBytes = $utf8WithBom.GetPreamble()
+				$fileStream.Write($bomBytes, 0, $bomBytes.Length)
+			}
+			$opened = $true
+		}
+		catch {
+			$attempt++
+			if ($attempt -lt $maxAttempts) { Start-Sleep -Milliseconds 200 }
+		}
 	}
- else {
-		$fileStream = [System.IO.File]::Create($Path)
-		# 新しいファイルの場合はBOMを最初に書き込む
-		$bomBytes = $utf8WithBom.GetPreamble()
-		$fileStream.Write($bomBytes, 0, $bomBytes.Length)
+
+	if (-not $opened) {
+		$dir = Split-Path $Path -Parent
+		$base = [System.IO.Path]::GetFileNameWithoutExtension($Path)
+		$ext = [System.IO.Path]::GetExtension($Path)
+		$fallbackPath = Join-Path $dir ("{0}.alt{1}" -f $base, $ext)
+
+		Write-Host ("[WARN] ログファイルにアクセスできません。フォールバックへ出力します: {0}" -f $fallbackPath) -ForegroundColor Yellow
+
+		$attempt = 0
+		while (-not $opened -and $attempt -lt $maxAttempts) {
+			try {
+				if (Test-Path $fallbackPath) {
+					$fileStream = [System.IO.File]::Open($fallbackPath, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
+				}
+				else {
+					$fileStream = [System.IO.File]::Create($fallbackPath)
+					$bomBytes2 = $utf8WithBom.GetPreamble()
+					$fileStream.Write($bomBytes2, 0, $bomBytes2.Length)
+				}
+				$opened = $true
+			}
+			catch {
+				$attempt++
+				Start-Sleep -Milliseconds 200
+			}
+		}
+
+		if (-not $opened) {
+			Write-Host ("[WARN] ログ書き込みに失敗しました（フォールバックも失敗）。メッセージ: {0}" -f $Message) -ForegroundColor Yellow
+			return
+		}
 	}
 
 	try {
 		$bytes = $utf8WithBom.GetBytes($messageWithNewline)
 		$fileStream.Write($bytes, 0, $bytes.Length)
 	}
+	catch {
+		Write-Host ("[WARN] ログ書き込み中にエラーが発生しました。メッセージを破棄して継続します: {0} (原因: {1})" -f $Message, $_.Exception.Message) -ForegroundColor Yellow
+	}
 	finally {
-		$fileStream.Close()
+		if ($fileStream) { $fileStream.Close() }
 	}
 }
 
