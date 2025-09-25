@@ -116,6 +116,49 @@ scripts/setup/apply-taskbar-layout.ps1 -Force -Quiet
 
 ---
 
+### タスクバー設定のエクスポート手順（概要）
+
+Windows 11 公式では、タスクバーの「現在のユーザー構成をそのままエクスポートする」専用コマンドは提供されていません。実務上は次のどちらかの方法で「エクスポート相当」を行います。
+
+- **手動エクスポート（推奨）**: 現在のピン留め構成を観察し、AUMID と .lnk を収集して `TaskbarLayoutModification.XML` を作成する方法
+  1. 現在のタスクバーの並び順を確認
+  2. UWP/Store アプリの AUMID を取得
+     ```powershell
+     Get-StartApps | Sort-Object Name
+     ```
+  3. デスクトップアプリは「すべてのユーザーのスタートメニュー」配下のショートカット `.lnk` を優先して参照
+     - 例: `%PROGRAMDATA%\Microsoft\Windows\Start Menu\Programs\*.lnk`
+     - ユーザー専用の場合: `%APPDATA%\Microsoft\Windows\Start Menu\Programs\*.lnk`
+  4. 収集した情報を XML 雛形に反映
+     - UWP: `<taskbar:UWA AppUserModelID="…" />`
+     - デスクトップアプリ: `<taskbar:DesktopApp DesktopApplicationLinkPath="…\\*.lnk" />`
+     - 必要に応じてエクスプローラー: `<taskbar:DesktopApp DesktopApplicationID="Microsoft.Windows.Explorer" />`
+  5. `PinListPlacement="Replace"` を指定し、既存のピン留めを置換するかどうかを決定
+  6. 本プロジェクトの `scripts/setup/apply-taskbar-layout.ps1` で検証適用（`-DryRun` → `-Force`）
+
+- **監査モードでのイメージキャプチャ方式**: 組織標準としてイメージに組み込む場合
+  1. 監査モード（`Ctrl`+`Shift`+`F3`）で起動
+  2. Taskbar Layout Modification の既定パスをレジストリに設定
+     ```cmd
+     reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer /v LayoutXMLPath /d C:\\Windows\\OEM\\TaskbarLayoutModification.xml /f
+     ```
+  3. 作成した `TaskbarLayoutModification.xml` を `C:\\Windows\\OEM\\` に配置（必要に応じて `C:\\Recovery\\AutoApply\\` にバックアップ）
+  4. Sysprep で一般化後に再キャプチャ
+     ```cmd
+     Sysprep /generalize /oobe /shutdown
+     Dism /Capture-Image /CaptureDir:C:\\ /ImageFile:C:\\install-with-new-taskbar-layout.wim /Name:"Windows image with Taskbar layout"
+     ```
+
+注意:
+- `.url` へのリンクはサポートされません
+- OEM は OS 既定のピンに加えて、最大 3 つまでアプリをピン留め可能
+- Windows 11 の `Export-StartLayout` はスタートメニュー向けであり、タスクバーのピン留めは含みません
+
+参考（公式）:
+- タスク バーをカスタマイズする（Windows 11）: [learn.microsoft.com/ja-jp/windows-hardware/customize/desktop/customize-the-windows-11-taskbar](https://learn.microsoft.com/ja-jp/windows-hardware/customize/desktop/customize-the-windows-11-taskbar)
+
+---
+
 ### トラブルシュート
 
 - **ピン留めが置換されない**:

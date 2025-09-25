@@ -76,3 +76,36 @@ Remove-ProvisioningPackage -PackageId <PACKAGE_ID>
 ### 注意事項
 - 本サンプル PPKG は「スタートメニューのピン留め」のみを変更します。タスクバーのピン留めは `apply-taskbar-layout.ps1` で行います
 - PPKG の適用対象やユーザー範囲は PPKG の内容に依存します。必要に応じて Windows Configuration Designer で編集してください
+
+
+### PPKG の作成手順（概要）
+
+- Windows 構成デザイナーを起動し、「高度なプロビジョニング」を選択
+- プロジェクト名を入力し、対象の Windows エディション/デバイス種別を選択
+- 必要な設定（共通設定、ポリシー、アプリ/スクリプト、ファイル、レジストリなど）を追加・編集
+- エクスポート/ビルド時にパッケージ情報を設定（名前、任意でバージョン、所有者は「IT 管理者」、任意で順位）
+- セキュリティ（任意）：暗号化または署名を選択。署名運用の場合は信頼済みプロビジョナーの証明書配置や `RequireProvisioningPackageSignature` の方針を検討
+- 出力先を指定してビルドし、生成された `.ppkg` を取得
+- 生成した `.ppkg` を本リポジトリの `config/` に配置し、本ガイドの手順で適用
+
+参考（公式ヘルプ）：プロビジョニング パッケージを作成する（詳細）
+`https://learn.microsoft.com/ja-jp/windows/configuration/provisioning-packages/provisioning-create-package`
+
+
+### スタートメニュー設定のエクスポート手順（概要）
+
+- 参照端末でタスクバーとスタートのピンを理想状態に整える
+- スタート ピンのエクスポート（Windows 10 は XML、Windows 11 は JSON）
+  - PowerShell（管理者）:
+```powershell
+Export-StartLayout -Path .\StartLayout.json
+```
+- エクスポート内容のアプリ情報を `config/TaskbarLayoutModification.XML` に反映
+  - UWP/Store アプリ: 取得した AppUserModelID を `<taskbar:UWA ...>` に設定
+  - デスクトップアプリ: `.lnk` を `<taskbar:DesktopApp DesktopApplicationLinkPath="...">` に設定
+- タスクバーのピン自体を直接「エクスポート」する公式手段はないため、XML を手動で整備するのが確実
+- 組織配布の参考（スタート ピン）
+  - MDM/GPO: `Start/ConfigureStartPins`（Windows 11 24H2 以降、KB5062660）
+  - PPKG: `Policies/Start/ConfigureStartPins` に JSON を 1 行で設定（改行除去）
+
+参考: [Microsoft Learn: スタート画面のレイアウトをカスタマイズします](https://learn.microsoft.com/ja-jp/windows/configuration/start/layout?tabs=intune-10%2Cintune-11&pivots=windows-10)
