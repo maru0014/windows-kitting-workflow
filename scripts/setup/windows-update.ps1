@@ -179,6 +179,7 @@ function Install-WindowsUpdates {
 			'AcceptAll'  = $true
 			'AutoReboot' = $false
 			'Verbose'    = $true
+			'Install'    = $true
 		}
 
 		if ($MicrosoftUpdate) {
