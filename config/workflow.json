@@ -159,7 +159,7 @@
           "KBArticleID": [],
           "NotKBArticleID": [],
           "Force": true,
-          "RebootIfRequired": true
+          "RebootIfRequired": false
         },
         "completionCheck": {
           "type": "file",

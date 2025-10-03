@@ -177,9 +177,8 @@ function Install-WindowsUpdates {
 
 		$installParams = @{
 			'AcceptAll'  = $true
-			'AutoReboot' = $false
-			'Verbose'    = $true
 			'Install'    = $true
+			'Verbose'    = $true
 		}
 
 		if ($MicrosoftUpdate) {
@@ -192,6 +191,14 @@ function Install-WindowsUpdates {
 
 		if ($NotKBArticleID -and $NotKBArticleID.Count -gt 0) {
 			$installParams['NotKBArticleID'] = $NotKBArticleID
+		}
+
+		# 再起動ポリシーの適用（無人実行のため再起動確認を抑止）
+		if ($RebootIfRequired) {
+			$installParams['AutoReboot'] = $true
+		}
+		else {
+			$installParams['IgnoreReboot'] = $true
 		}
 
 		# アップデートのダウンロードとインストール
